@@ -1,0 +1,17 @@
+package com.po4yka.app
+
+import android.app.Application
+import com.po4yka.app.di.appModule
+import com.po4yka.app.di.platformModule
+import org.koin.core.context.startKoin
+
+class MainApplication : Application() {
+    override fun onCreate() {
+        super.onCreate()
+        appContext = this
+
+        startKoin {
+            modules(appModule, platformModule())
+        }
+    }
+}

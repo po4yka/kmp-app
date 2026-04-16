@@ -1,0 +1,11 @@
+<resources>
+    <string name="app_name">KMP App</string>
+    <string name="home_title">KMP App</string>
+    <string name="detail_title">Detail</string>
+    <string name="add_item">Add Item</string>
+    <string name="delete">Delete</string>
+    <string name="back">Back</string>
+    <string name="loading">Loading...</string>
+    <string name="title_label">Title</string>
+    <string name="description_label">Description</string>
+</resources>
