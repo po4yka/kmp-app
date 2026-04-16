@@ -4,6 +4,25 @@
 
 KMP + Compose Multiplatform template targeting iOS and Android with shared UI.
 
+## Rules
+
+- **Never extend baselines**: If detekt or lint baselines need updating, fix the underlying issue instead. Suppressing violations by extending baselines is not allowed.
+- **Goal-driven execution**: Before writing any code, convert the task into verifiable success criteria. Define what "done" looks like before touching a file.
+
+## Coding Discipline
+
+### Think Before Coding
+State assumptions explicitly before starting. Surface tradeoffs and edge cases. Ask clarifying questions rather than assuming. If the approach is unclear, stop and reason it out first.
+
+### Simplicity First
+Write the minimum code that solves the problem. No speculative features. No abstractions created for a single use. If a helper is only called once, inline it.
+
+### Surgical Changes
+Touch only the files and lines required by the task. Do not refactor adjacent code, rename unrelated symbols, or reorganize untouched modules while implementing a feature.
+
+### Goal-Driven Execution
+Define verifiable success criteria before implementation. Prefer test-first loops: write the failing assertion, make it pass, verify. Done means the criteria pass, not that the code looks finished.
+
 ## Architecture
 
 - `composeApp/` - Shared KMP library (commonMain, androidMain, iosMain)
