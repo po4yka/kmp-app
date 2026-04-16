@@ -17,3 +17,6 @@ DerivedData
 .cxx
 .kotlin
 .omc
+
+# Claude Code (user-specific, keep .claude/skills/ committed)
+.claude/settings.local.json
