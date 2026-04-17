@@ -1,0 +1,87 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  release-android:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: 'zulu'
+          java-version: '17'
+
+      - uses: gradle/actions/setup-gradle@v4
+
+      - name: Decode keystore
+        run: |
+          echo "${{ secrets.ANDROID_KEYSTORE_BASE64 }}" | base64 --decode > androidApp/release.keystore
+        # CONFIGURE ME: add ANDROID_KEYSTORE_BASE64 to your repository secrets.
+        # See docs/release.md for instructions on generating and encoding a keystore.
+
+      - name: Build release AAB
+        run: ./gradlew androidApp:bundleRelease
+        env:
+          # CONFIGURE ME: add these four secrets to your repository settings.
+          KEYSTORE_PATH: ${{ github.workspace }}/androidApp/release.keystore
+          KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
+          KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
+
+      - name: Upload AAB artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-aab-${{ github.ref_name }}
+          path: androidApp/build/outputs/bundle/release/*.aab
+          if-no-files-found: error
+
+      # CONFIGURE ME: uncomment and configure to publish to Google Play via
+      # gradle-play-publisher (https://github.com/Triple-T/gradle-play-publisher).
+      # Prerequisites:
+      #   1. Apply the plugin in androidApp/build.gradle.kts:
+      #        id("com.github.triplet.play") version "..."
+      #   2. Configure the play { ... } block pointing at the service account JSON.
+      #   3. Add the PLAY_SERVICE_ACCOUNT_JSON secret to your repository.
+      #
+      # - name: Publish to Play Store (internal track)
+      #   run: ./gradlew androidApp:publishBundle
+      #   env:
+      #     PLAY_SERVICE_ACCOUNT_JSON: ${{ secrets.PLAY_SERVICE_ACCOUNT_JSON }}
+
+  release-ios:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: 'zulu'
+          java-version: '17'
+
+      - uses: gradle/actions/setup-gradle@v4
+
+      - name: Build release frameworks
+        run: |
+          ./gradlew composeApp:linkReleaseFrameworkIosArm64 \
+                    composeApp:linkReleaseFrameworkIosSimulatorArm64
+
+      - name: Upload iOS framework artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-framework-${{ github.ref_name }}
+          path: |
+            composeApp/build/bin/iosArm64/releaseFramework/
+            composeApp/build/bin/iosSimulatorArm64/releaseFramework/
+          if-no-files-found: error
+
+      # CONFIGURE ME: shipping to TestFlight requires additional steps beyond
+      # producing the framework. You need to:
+      #   1. Link the framework from the existing iosApp/ Xcode project.
+      #   2. Create an App Store Connect API key and add it as a GitHub secret.
+      #   3. Add an Xcode archive + upload step (e.g. using fastlane or xcodebuild).
+      # See docs/release.md for a full walkthrough.
