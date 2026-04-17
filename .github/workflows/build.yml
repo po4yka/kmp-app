@@ -53,3 +53,13 @@ jobs:
 
       - name: Build iOS framework
         run: ./gradlew composeApp:linkDebugFrameworkIosSimulatorArm64
+
+      - name: Run tests
+        run: ./gradlew composeApp:iosSimulatorArm64Test
+
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-results-ios
+          path: '**/build/reports/tests/'
