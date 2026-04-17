@@ -1,12 +1,25 @@
 # KMP App Template
 
-## Overview
+Instructions for any AI agent (Claude Code, Codex CLI, Cursor, Gemini CLI, Copilot) working in this repo. This file is the canonical source of truth; `CLAUDE.md` imports it via `@AGENTS.md`.
 
-Kotlin Multiplatform template for iOS and Android with Compose Multiplatform shared UI.
+## Project Overview
 
-## Architecture
+Kotlin Multiplatform template targeting iOS and Android with Compose Multiplatform shared UI. All shared code (UI, navigation, DI, data, networking) lives in `composeApp/src/commonMain/`; platform `actual` implementations live in `androidMain/` and `iosMain/`.
 
-Module dependency diagram:
+## Tech Stack
+
+- Kotlin 2.3.20, Compose Multiplatform 1.10.3, AGP 9.0.1
+- Navigation 3 (type-safe `Route : NavKey` sealed interface)
+- Koin + Koin Compiler Plugin (DI)
+- Room KMP with `BundledSQLiteDriver`
+- Ktor client + kotlinx.serialization
+- Multiplatform Settings (`SharedPreferences` / `NSUserDefaults`)
+- Coil 3 with Ktor network backend
+- Kermit (logging)
+- BuildKonfig (build-time config)
+- detekt (static analysis)
+
+## Module Layout
 
 ```
 androidApp (com.android.application)
@@ -22,79 +35,76 @@ iosApp (Swift)
 ## Source Set Layout
 
 | Source set | What belongs here |
-|------------|------------------|
-| `commonMain` | All shared code: Compose UI, ViewModels, navigation, Koin DI modules, Room DAOs, Ktor client, domain models |
-| `androidMain` | Android-specific: Room DB builder via `Context`, `SharedPreferences`-backed Settings, OkHttp Ktor engine |
-| `iosMain` | iOS-specific: Room DB builder via `NSFileManager`, `NSUserDefaults`-backed Settings, Darwin Ktor engine, `MainViewController.kt` |
+|------------|-------------------|
+| `commonMain` | Shared code: Compose UI, ViewModels, navigation, Koin modules, Room DAOs/entities, Ktor client, domain models |
+| `androidMain` | Android: Room DB builder via `Context`, `SharedPreferences` Settings, OkHttp Ktor engine |
+| `iosMain` | iOS: Room DB builder via `NSFileManager`, `NSUserDefaults` Settings, Darwin Ktor engine, `MainViewController.kt` |
 
-## Build & Test
+## Build Commands
 
-- Build Android: `./gradlew androidApp:assembleDebug`
-- Build iOS: `./gradlew composeApp:linkDebugFrameworkIosSimulatorArm64`
-- Run tests: `./gradlew composeApp:allTests`
-- Static analysis: `./gradlew detekt`
-- Release build: `./gradlew androidApp:assembleRelease`
+- Android: `./gradlew androidApp:assembleDebug`
+- iOS framework: `./gradlew composeApp:linkDebugFrameworkIosSimulatorArm64`
+- Tests: `./gradlew composeApp:allTests`
+- Lint: `./gradlew detekt`
+- Release: `./gradlew androidApp:assembleRelease`
 
-## Key Libraries
+## Verification Order
 
-| Category | Library |
-|----------|---------|
-| UI | Compose Multiplatform 1.10.3 |
-| Navigation | Navigation 3 (type-safe sealed routes) |
-| DI | Koin + Koin Compiler Plugin |
-| Database | Room KMP + BundledSQLiteDriver |
-| Network | Ktor client + kotlinx.serialization |
-| Settings | Multiplatform Settings |
-| Images | Coil 3 |
-| Logging | Kermit |
-| Build config | BuildKonfig |
+Run these after every change, in this order — fastest-first. Stop on the first failure; fix it before continuing.
 
-## Patterns
+1. `./gradlew detekt`
+2. `./gradlew androidApp:assembleDebug`
+3. `./gradlew composeApp:linkDebugFrameworkIosSimulatorArm64`
+4. `./gradlew composeApp:allTests`
 
-### expect/actual
-Platform-specific code is declared with `expect` in `commonMain` and implemented with `actual` in `androidMain` and `iosMain`.
+## Coding Discipline
 
-- `Platform.kt` — `expect class Platform` with platform name/info
-- `PlatformModule.kt` — `expect val platformModule: Module` providing platform DI bindings
+### Think Before Coding
+State assumptions explicitly before starting. Surface tradeoffs and edge cases. Ask clarifying questions rather than assuming. If the approach is unclear, stop and reason it out first.
 
-### Room DAOs
-All DAO functions must be `suspend` (or return `Flow`). Direct blocking calls are not supported on non-Android targets. Define entities and DAOs in `commonMain`; provide the DB builder in each platform source set.
+### Simplicity First
+Write the minimum code that solves the problem. No speculative features. No abstractions created for a single use. If a helper is only called once, inline it.
 
-### Nav3 Routes
-Routes are defined as a `@Serializable` sealed interface `Route : NavKey` in `navigation/Routes.kt`. Each screen is a data object or data class nested inside `Route`. Navigation graph is assembled in `navigation/AppNavigation.kt`.
+### Surgical Changes
+Touch only the files and lines required by the task. Do not refactor adjacent code, rename unrelated symbols, or reorganize untouched modules while implementing a feature.
 
-```kotlin
-@Serializable
-sealed interface Route : NavKey {
-    @Serializable data object Home : Route
-    @Serializable data class Detail(val id: String) : Route
-}
-```
+### Goal-Driven Execution
+Define verifiable success criteria before implementation. Prefer test-first loops: write the failing assertion, make it pass, verify. Done means the criteria pass, not that the code looks finished.
 
-### DI
-Koin modules live in `di/AppModule.kt` (shared) and `di/PlatformModule.kt` (expect/actual). ViewModels are registered with `viewModelOf` and injected in composables with `koinViewModel()`.
+## KMP Rules
 
-## Adding a New Feature
+Each rule is imperative — do X, not Y. These are the invariants most often violated by LLMs unfamiliar with KMP linker behavior.
 
-1. Add route to `composeApp/src/commonMain/.../navigation/Routes.kt`
-2. Create `Screen.kt` + `ViewModel.kt` in `ui/<feature>/`
-3. Register ViewModel in `di/AppModule.kt`
-4. Add navigation entry in `navigation/AppNavigation.kt`
-5. Run both Android and iOS builds to verify
+- **`expect`/`actual` is for platform wiring only.** No business logic in `expect` declarations. Keep logic in `commonMain` Kotlin classes; reserve `expect` for thin platform primitives or `PlatformModule` DI glue.
+- **Room DAOs must be `suspend` or return `Flow`.** Blocking DAO calls fail the iOS linker. Never write a DAO function that is neither `suspend` nor `Flow`.
+- **Use Koin for DI. Never Hilt.** `hiltViewModel()` and `@HiltViewModel` do not compile in `commonMain`. Use `viewModelOf` in `di/AppModule.kt` and `koinViewModel()` in composables.
+- **Use `Res.*` for resources in shared code.** `R.string` / `R.drawable` do not exist in `commonMain`. Use `Res.string.*` / `Res.drawable.*` imported from `com.po4yka.app.generated.resources`.
+- **Navigation routes are `@Serializable` sealed subtypes of `Route : NavKey`.** Never use string-based routes or raw destinations. All routes live in `navigation/Routes.kt`.
+- **Verify KMP targets before adding a dependency.** Before adding a line to `commonMain.dependencies { … }`, confirm the artifact publishes `-jvm`, `-iosarm64`, `-iosX64`, `-iosSimulatorArm64` coordinates on Maven Central. If it doesn't, place the dependency in `androidMain` / `iosMain` or wrap behind a platform interface.
+- **Prefer interfaces + DI for stateful platform services; `expect/actual` only for thin primitives.** Use an interface + Koin binding for lifecycle, async, or hardware (player, auth, haptics, share sheet). Reserve `expect/actual` for stateless one-liners (UUID, platform name, default locale).
+- **No Android-specific imports in `commonMain`.** `LocalContext`, `collectAsStateWithLifecycle`, `@Parcelize`, `Bundle`, `AndroidView`, `BackHandler`, `hiltViewModel()` are all Android-only. Use `collectAsState()` instead of `collectAsStateWithLifecycle()`; abstract `Context` behind an interface or `expect`.
+- **Never extend detekt or lint baselines.** Fix the underlying violation. Extending `config/detekt/baseline.xml` to suppress findings is a blocking review failure.
 
-## Adding a New Platform Implementation
+## Conventions
 
-When a new capability requires platform-specific code:
-
-1. Declare `expect fun/class/val` in the relevant `commonMain` file
-2. Add `actual` implementations in `androidMain` and `iosMain`
-3. If DI is needed, add bindings in `PlatformModule.android.kt` and `PlatformModule.ios.kt`
-4. Keep the common interface minimal — only expose what commonMain actually needs
-5. Verify with `./gradlew composeApp:allTests` and both platform builds
+- Package: `com.po4yka.app`
+- Platform primitives in `Platform.kt`; platform DI in `PlatformModule.kt` (both use `expect/actual`)
+- Theme in `ui/theme/` (`AppTheme` wraps `MaterialTheme`; light/dark via `isSystemInDarkTheme()`)
+- Compose resources in `composeApp/src/commonMain/composeResources/`
+- ViewModels registered via Koin `viewModelOf` in `di/AppModule.kt`; injected via `koinViewModel()`
 
 ## Code Quality
 
-- **detekt** config: `config/detekt/detekt.yml`
-- Run locally: `./gradlew detekt`
-- Never extend the detekt baseline (`config/detekt/baseline.xml`) to suppress violations — fix the underlying issue
+- detekt config: `config/detekt/detekt.yml`
 - GitHub Actions CI runs detekt, unit tests, and Android debug build on every PR
+- See the **Never extend baselines** rule above
+
+## Skills for Common Tasks
+
+On-demand skills (`Skill` tool / `/<name>`) exist for repeatable workflows — use them instead of re-deriving steps:
+
+- `kmp-feature` — scaffold a new feature (screen + ViewModel + route + DI registration)
+- `kmp-entity` — add a Room entity + DAO and register in `AppDatabase`
+- `kmp-platform-audit` — audit `expect/actual` completeness, add a new platform implementation
+- `kmp-build` — run the verification pipeline
+- `compose-patterns` — Compose Multiplatform coding rules, anti-patterns, and API availability
