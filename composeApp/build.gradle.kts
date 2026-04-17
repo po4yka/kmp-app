@@ -1,11 +1,7 @@
 import com.codingfeline.buildkonfig.compiler.FieldSpec.Type.STRING
-import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 
 plugins {
-    alias(libs.plugins.kotlin.multiplatform)
-    alias(libs.plugins.android.kmp.library)
-    alias(libs.plugins.compose.multiplatform)
-    alias(libs.plugins.compose.compiler)
+    id("kmp-app.kmp-compose")
     alias(libs.plugins.kotlin.serialization)
     alias(libs.plugins.ksp)
     alias(libs.plugins.room)
@@ -15,30 +11,8 @@ plugins {
 }
 
 kotlin {
-    compilerOptions {
-        freeCompilerArgs.add("-Xexpect-actual-classes")
-    }
-
     androidLibrary {
         namespace = "com.po4yka.app.shared"
-        compileSdk = 36
-        minSdk = 27
-
-        compilerOptions {
-            jvmTarget.set(JvmTarget.JVM_17)
-        }
-    }
-
-    listOf(
-        iosX64(),
-        iosArm64(),
-        iosSimulatorArm64()
-    ).forEach { iosTarget ->
-        iosTarget.binaries.framework {
-            baseName = "ComposeApp"
-            isStatic = true
-            binaryOption("bundleId", "com.po4yka.app.ComposeApp")
-        }
     }
 
     sourceSets {

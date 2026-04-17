@@ -1,16 +1,14 @@
 plugins {
-    alias(libs.plugins.android.application)
+    id("kmp-app.android-application")
     alias(libs.plugins.compose.multiplatform)
     alias(libs.plugins.compose.compiler)
 }
 
 android {
     namespace = "com.po4yka.app"
-    compileSdk = 36
 
     defaultConfig {
         applicationId = "com.po4yka.app"
-        minSdk = 27
         targetSdk = 36
         versionCode = 1
         versionName = "1.0"
@@ -25,11 +23,6 @@ android {
                 "proguard-rules.pro"
             )
         }
-    }
-
-    compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_17
-        targetCompatibility = JavaVersion.VERSION_17
     }
 }
 

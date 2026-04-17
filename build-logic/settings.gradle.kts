@@ -1,5 +1,4 @@
 pluginManagement {
-    includeBuild("build-logic")
     repositories {
         google {
             mavenContent {
@@ -23,10 +22,14 @@ dependencyResolutionManagement {
             }
         }
         mavenCentral()
-        maven("https://jitpack.io")
+        gradlePluginPortal()
+    }
+
+    versionCatalogs {
+        create("libs") {
+            from(files("../gradle/libs.versions.toml"))
+        }
     }
 }
 
-rootProject.name = "kmp-app"
-include(":composeApp")
-include(":androidApp")
+rootProject.name = "build-logic"
