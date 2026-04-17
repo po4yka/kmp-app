@@ -1,0 +1,40 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "extends": ["config:best-practices"],
+  "schedule": ["before 6am on monday"],
+  "timezone": "Europe/Tallinn",
+  "rangeStrategy": "pin",
+  "dependencyDashboard": true,
+  "labels": ["dependencies"],
+  "automerge": false,
+  "packageRules": [
+    {
+      "groupName": "Kotlin toolchain",
+      "matchPackageNames": [
+        "org.jetbrains.kotlin:**",
+        "com.android.tools.build:**",
+        "org.jetbrains.compose:**"
+      ],
+      "matchDepTypes": ["plugin"],
+      "matchPackagePatterns": [
+        "org.jetbrains.kotlin.*",
+        "com.android.*",
+        "org.jetbrains.compose"
+      ],
+      "labels": ["dependencies", "Kotlin toolchain"]
+    },
+    {
+      "groupName": "KSP and Room",
+      "matchPackageNames": [
+        "com.google.devtools.ksp",
+        "androidx.room:**"
+      ]
+    },
+    {
+      "groupName": "Ktor",
+      "matchPackageNames": [
+        "io.ktor:**"
+      ]
+    }
+  ]
+}
