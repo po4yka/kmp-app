@@ -6,7 +6,12 @@ user-invocable: false
 
 # Compose Multiplatform Patterns
 
-Reference for shared Compose UI in `composeApp/src/commonMain/`. Follow these defaults unless the task has an explicit reason to deviate. For repo-wide invariants (Koin-not-Hilt, Room suspend, verification order) see `AGENTS.md`.
+Reference for shared Compose UI in `:feature:*:impl`, `:core:ui`, and `:composeApp`. Follow these defaults unless the task has an explicit reason to deviate. For repo-wide invariants (Koin-not-Hilt, Room suspend, verification order, module boundaries, state management, visibility) see `AGENTS.md`. For longer treatment of specific areas see `docs/state-management.md`, `docs/testing.md`, `docs/performance.md`, `docs/visibility.md`.
+
+**Where UI code lives:**
+- Feature-specific screens + ViewModels → `:feature:<name>:impl` (commonMain)
+- Shared/reusable composables, theme, design tokens → `:core:ui`
+- App shell (`App.kt`, `AppNavigation.kt`) → `:composeApp` (commonMain)
 
 ## State Management
 
@@ -18,11 +23,12 @@ Reference for shared Compose UI in `composeApp/src/commonMain/`. Follow these de
 
 ## Navigation 3
 
-- Routes are `@Serializable` sealed subtypes of `Route : NavKey` in `navigation/Routes.kt`.
-- `NavDisplay` with `entryProvider { entry<Route.X> { … } }`.
+- Each feature declares its route in `:feature:<name>:api` as an `@Serializable` subtype of `Route : NavKey` (imported from `:core:navigation`).
+- **Routes are not `sealed`** — Kotlin `sealed` cannot span Gradle modules. Use a plain `interface Route : NavKey` + explicit polymorphic registration in `composeApp/…/AppNavigation.kt`'s `SavedStateConfiguration`.
+- Each `:feature:<name>:impl` exposes an `EntryProviderScope<NavKey>.<name>Entries(...)` extension that registers its `entry<...Route> { … }` blocks. (`EntryProviderScope`, not `EntryProviderBuilder` — the latter doesn't exist in Navigation 3 alpha05.)
+- The app shell's `AppNavigation.kt` aggregates all feature entries inside one `entryProvider {}` block.
 - Entry decorators: `rememberSaveableStateHolderNavEntryDecorator()`, `rememberViewModelStoreNavEntryDecorator()`.
-- Non-JVM platforms need `SavedStateConfiguration` with polymorphic serialization.
-- Navigate: `backStack.add(Route.X)`; back: `backStack.removeLastOrNull()`.
+- Navigate: `backStack.add(SomeRoute)`; back: `backStack.removeLastOrNull()`. Cross-feature navigation is wired by the app shell as a callback prop — the caller feature does not import the target feature's `:impl`.
 
 ## Screen Structure
 
@@ -33,7 +39,8 @@ Reference for shared Compose UI in `composeApp/src/commonMain/`. Follow these de
 
 ## Resources
 
-- All shared strings/drawables/fonts go in `composeApp/src/commonMain/composeResources/` (`values/strings.xml`, `drawable/`, `font/`).
+- Resources are **module-scoped**. Put feature-specific strings/drawables/fonts in that feature's `:impl` module: `feature/<name>/impl/src/commonMain/composeResources/`. App-global resources live in `:composeApp/src/commonMain/composeResources/`.
+- Each module generates its own `Res` object in `<module-package>.generated.resources`. Never reach into another module's `Res` — if two modules need the same string, copy it or move it to a shared module and consume from there.
 - Access via `stringResource(Res.string.xxx)` and `painterResource(Res.drawable.xxx)`.
 - Never `R.string` or `R.drawable` in `commonMain` — those are Android-only.
 - Qualifiers are hyphenated: `values-fr/`, `drawable-dark/`, `drawable-xxhdpi/`.
@@ -48,9 +55,9 @@ Reference for shared Compose UI in `composeApp/src/commonMain/`. Follow these de
 
 ## Theme
 
-- `AppTheme` in `ui/theme/Theme.kt` wraps `MaterialTheme`.
+- `AppTheme` lives in `:core:ui` (`com.po4yka.app.core.ui.theme.AppTheme`) and wraps `IndustrialTheme`.
 - Light/dark via `isSystemInDarkTheme()`.
-- Colors in `Color.kt`, typography in `Type.kt`.
+- Feature modules don't redefine the theme — they rely on `AppTheme` being applied once at the app root (`App.kt`).
 
 ## API Availability (commonMain vs platform)
 

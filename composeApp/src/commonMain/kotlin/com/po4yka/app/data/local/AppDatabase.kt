@@ -4,8 +4,8 @@ import androidx.room.ConstructedBy
 import androidx.room.Database
 import androidx.room.RoomDatabase
 import androidx.room.RoomDatabaseConstructor
-import com.po4yka.app.data.local.dao.SampleDao
-import com.po4yka.app.data.local.entity.SampleEntity
+import com.po4yka.app.data.sample.SampleDao
+import com.po4yka.app.data.sample.SampleEntity
 
 @Database(entities = [SampleEntity::class], version = 1)
 @ConstructedBy(AppDatabaseConstructor::class)

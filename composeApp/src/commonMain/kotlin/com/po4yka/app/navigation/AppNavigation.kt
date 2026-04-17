@@ -1,32 +1,33 @@
 package com.po4yka.app.navigation
 
 import androidx.compose.runtime.Composable
+import androidx.lifecycle.viewmodel.navigation3.rememberViewModelStoreNavEntryDecorator
 import androidx.navigation3.runtime.NavKey
 import androidx.navigation3.runtime.entryProvider
 import androidx.navigation3.runtime.rememberNavBackStack
 import androidx.navigation3.runtime.rememberSaveableStateHolderNavEntryDecorator
 import androidx.navigation3.ui.NavDisplay
-import androidx.lifecycle.viewmodel.navigation3.rememberViewModelStoreNavEntryDecorator
 import androidx.savedstate.serialization.SavedStateConfiguration
+import com.po4yka.app.feature.detail.api.DetailRoute
+import com.po4yka.app.feature.detail.impl.detailEntries
+import com.po4yka.app.feature.home.api.HomeRoute
+import com.po4yka.app.feature.home.impl.homeEntries
 import kotlinx.serialization.modules.SerializersModule
 import kotlinx.serialization.modules.polymorphic
-import kotlinx.serialization.ExperimentalSerializationApi
-import kotlinx.serialization.modules.subclassesOfSealed
-import com.po4yka.app.ui.home.HomeScreen
-import com.po4yka.app.ui.detail.DetailScreen
+import kotlinx.serialization.modules.subclass
 
-@OptIn(ExperimentalSerializationApi::class)
 private val savedStateConfig = SavedStateConfiguration {
     serializersModule = SerializersModule {
         polymorphic(NavKey::class) {
-            subclassesOfSealed<Route>()
+            subclass(HomeRoute::class, HomeRoute.serializer())
+            subclass(DetailRoute::class, DetailRoute.serializer())
         }
     }
 }
 
 @Composable
 fun AppNavigation() {
-    val backStack = rememberNavBackStack(savedStateConfig, Route.Home)
+    val backStack = rememberNavBackStack(savedStateConfig, HomeRoute)
 
     NavDisplay(
         backStack = backStack,
@@ -36,20 +37,8 @@ fun AppNavigation() {
             rememberViewModelStoreNavEntryDecorator(),
         ),
         entryProvider = entryProvider {
-            entry<Route.Home> {
-                HomeScreen(
-                    onItemClick = { itemId ->
-                        backStack.add(Route.Detail(itemId))
-                    }
-                )
-            }
-
-            entry<Route.Detail> { key ->
-                DetailScreen(
-                    itemId = key.itemId,
-                    onBack = { backStack.removeLastOrNull() }
-                )
-            }
+            homeEntries(onOpenDetail = { itemId -> backStack.add(DetailRoute(itemId)) })
+            detailEntries(onBack = { backStack.removeLastOrNull() })
         }
     )
 }

@@ -7,7 +7,6 @@ plugins {
     alias(libs.plugins.room)
     alias(libs.plugins.koin.compiler)
     alias(libs.plugins.buildkonfig)
-    alias(libs.plugins.roborazzi)
 }
 
 kotlin {
@@ -23,77 +22,41 @@ kotlin {
             implementation(compose.components.resources)
             implementation(compose.components.uiToolingPreview)
 
-            // Navigation 3
+            // Navigation 3 + Lifecycle (needed here for NavDisplay in AppNavigation)
             implementation(libs.navigation3.ui)
             implementation(libs.lifecycle.viewmodel.navigation3)
 
-            // Lifecycle
-            implementation(libs.lifecycle.viewmodel.compose)
-
-            // DI - Koin
+            // DI - Koin (shell aggregates feature modules + builds databaseModule)
             implementation(libs.koin.core)
-            implementation(libs.koin.compose.viewmodel)
-            implementation(libs.koin.annotations)
 
-            // Logging
-            implementation(libs.kermit)
-
-            // Network
-            implementation(libs.ktor.client.core)
-            implementation(libs.ktor.client.content.negotiation)
-            implementation(libs.ktor.serialization.kotlinx.json)
-
-            // Serialization
-            implementation(libs.kotlinx.serialization.json)
-
-            // Coroutines
-            implementation(libs.kotlinx.coroutines.core)
-
-            // DateTime
-            implementation(libs.kotlinx.datetime)
-
-            // Image loading
-            implementation(libs.coil.compose)
-            implementation(libs.coil.network.ktor3)
-
-            // Data - Room
+            // Data - Room (@Database lives here; KSP runs here)
             implementation(libs.room.runtime)
             implementation(libs.sqlite.bundled)
 
-            // Data - Settings
-            implementation(libs.multiplatform.settings)
+            // Serialization (polymorphic nav key registration)
+            implementation(libs.kotlinx.serialization.json)
 
-            // Design system
-            implementation(libs.industrial.design)
+            // Image loading (app-level)
+            implementation(libs.coil.compose)
+            implementation(libs.coil.network.ktor3)
+
+            // Modules
+            implementation(project(":core:common"))
+            implementation(project(":core:ui"))
+            implementation(project(":core:navigation"))
+            implementation(project(":core:network"))
+            implementation(project(":core:settings"))
+            implementation(project(":data:sample"))
+            implementation(project(":feature:home:api"))
+            implementation(project(":feature:home:impl"))
+            implementation(project(":feature:detail:api"))
+            implementation(project(":feature:detail:impl"))
         }
 
         commonTest.dependencies {
             implementation(kotlin("test"))
             implementation(libs.kotlinx.coroutines.test)
             implementation(libs.turbine)
-            implementation(libs.multiplatform.settings.test)
-        }
-
-        androidMain.dependencies {
-            implementation(libs.ktor.client.okhttp)
-        }
-
-        iosMain.dependencies {
-            implementation(libs.ktor.client.darwin)
-        }
-
-        // Screenshot testing dependencies for Android unit tests (Roborazzi + Robolectric).
-        // Note: com.android.kotlin.multiplatform.library does not create a Kotlin compilation
-        // for Android unit tests, so these deps are declared here to make them available on
-        // the AGP configurations. The recordRoborazziDebug task will be available once AGP's
-        // KMP library plugin adds Android unit test compilation support.
-        androidUnitTest.dependencies {
-            implementation(kotlin("test"))
-            implementation(libs.roborazzi)
-            implementation(libs.roborazzi.compose)
-            implementation(libs.roborazzi.junit)
-            implementation(libs.robolectric)
-            implementation("org.jetbrains.compose.ui:ui-test-junit4-android:1.10.3")
         }
     }
 }

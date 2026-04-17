@@ -119,6 +119,7 @@ plugin-android-kmp-library = { module = "com.android.kotlin.multiplatform.librar
 plugin-android-application = { module = "com.android.application:com.android.application.gradle.plugin", version.ref = "agp" }
 plugin-compose-multiplatform = { module = "org.jetbrains.compose:compose-gradle-plugin", version.ref = "compose-multiplatform" }
 plugin-compose-compiler = { module = "org.jetbrains.kotlin:compose-compiler-gradle-plugin", version.ref = "kotlin" }
+plugin-kotlin-serialization = { module = "org.jetbrains.kotlin:kotlin-serialization", version.ref = "kotlin" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }

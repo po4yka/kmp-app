@@ -1,7 +1,7 @@
 package com.po4yka.app
 
 import android.app.Application
-import com.po4yka.app.di.appModule
+import com.po4yka.app.di.appModules
 import com.po4yka.app.di.platformModule
 import org.koin.core.context.startKoin
 
@@ -11,7 +11,7 @@ class MainApplication : Application() {
         appContext = this
 
         startKoin {
-            modules(appModule, platformModule())
+            modules(appModules() + platformModule())
         }
     }
 }

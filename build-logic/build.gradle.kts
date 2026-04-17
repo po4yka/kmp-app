@@ -8,4 +8,5 @@ dependencies {
     implementation(libs.plugin.android.application)
     implementation(libs.plugin.compose.multiplatform)
     implementation(libs.plugin.compose.compiler)
+    implementation(libs.plugin.kotlin.serialization)
 }
