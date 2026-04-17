@@ -99,6 +99,17 @@ Each rule is imperative — do X, not Y. These are the invariants most often vio
 - GitHub Actions CI runs detekt, unit tests, and Android debug build on every PR
 - See the **Never extend baselines** rule above
 
+## Screenshot Testing
+
+Roborazzi is wired into `composeApp` for screenshot regression testing. Golden PNGs live in `composeApp/src/androidUnitTest/snapshots/` and are committed as the source of truth.
+
+**Caveat (AGP 9.0 KMP library plugin):** `com.android.kotlin.multiplatform.library` does not expose an Android unit test Kotlin compilation, so `recordRoborazziDebug` is not yet generated for the Android target. The Roborazzi plugin does generate iOS snapshot tasks (`recordRoborazziIosSimulatorArm64`). Track [AGP issue](https://issuetracker.google.com/issues/kotlin-multiplatform-android-unit-tests) for when Android unit test compilation support lands.
+
+When the Android task becomes available:
+- Record new goldens: `./gradlew composeApp:recordRoborazziDebug`
+- Verify against goldens: `./gradlew composeApp:verifyRoborazziDebug`
+- Review the PNG diff in `composeApp/src/androidUnitTest/snapshots/` before committing.
+
 ## Skills for Common Tasks
 
 On-demand skills (`Skill` tool / `/<name>`) exist for repeatable workflows — use them instead of re-deriving steps:

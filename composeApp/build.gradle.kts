@@ -11,6 +11,7 @@ plugins {
     alias(libs.plugins.room)
     alias(libs.plugins.koin.compiler)
     alias(libs.plugins.buildkonfig)
+    alias(libs.plugins.roborazzi)
 }
 
 kotlin {
@@ -105,6 +106,20 @@ kotlin {
 
         iosMain.dependencies {
             implementation(libs.ktor.client.darwin)
+        }
+
+        // Screenshot testing dependencies for Android unit tests (Roborazzi + Robolectric).
+        // Note: com.android.kotlin.multiplatform.library does not create a Kotlin compilation
+        // for Android unit tests, so these deps are declared here to make them available on
+        // the AGP configurations. The recordRoborazziDebug task will be available once AGP's
+        // KMP library plugin adds Android unit test compilation support.
+        androidUnitTest.dependencies {
+            implementation(kotlin("test"))
+            implementation(libs.roborazzi)
+            implementation(libs.roborazzi.compose)
+            implementation(libs.roborazzi.junit)
+            implementation(libs.robolectric)
+            implementation("org.jetbrains.compose.ui:ui-test-junit4-android:1.10.3")
         }
     }
 }
