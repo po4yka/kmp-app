@@ -1,16 +1,18 @@
 # KMP App Template
 
-A production-ready Kotlin Multiplatform template for iOS and Android with shared Compose Multiplatform UI, type-safe navigation, Koin DI, Room KMP persistence, Ktor networking, and a pre-wired monochrome design system. Ships with a full Claude Code / Codex / Cursor agent configuration: imperative rules, on-demand skills, and verification gates.
+A production-ready Kotlin Multiplatform template for iOS and Android with shared Compose Multiplatform UI, a feature-first modular architecture, type-safe navigation, Koin DI, Room KMP persistence, Ktor networking, and a pre-wired monochrome design system. Ships with a full Claude Code / Codex / Cursor agent configuration: imperative rules, on-demand skills, deep-dive policy docs, and verification gates.
 
 ## What you get
 
-- **One shared UI codebase.** Compose Multiplatform renders the same screens on Android and iOS. No per-platform UI duplication.
-- **Type-safe navigation.** Navigation 3 with `@Serializable` sealed routes — no string paths, no manual deep-link wiring.
-- **Persistence that works on both platforms.** Room KMP with `BundledSQLiteDriver` — identical DAOs in `commonMain`, platform-specific DB builders in `androidMain` / `iosMain`.
-- **Networking that respects platform engines.** Ktor client with OkHttp on Android and Darwin on iOS — same `HttpClient` API surface, native-performance transport.
-- **A real design system.** [`industrial-design-cmp`](https://github.com/po4yka/industrial-design-cmp) is consumed via JitPack — monochrome palette, bundled fonts, `IndustrialTokens` for spacing/motion/radius. No placeholder Material 3 purple.
-- **Agent rules on day one.** `AGENTS.md` is the single source of truth for Claude Code, Codex CLI, and Cursor. On-demand skills (`kmp-feature`, `kmp-entity`, `kmp-platform-audit`, `kmp-build`, `compose-patterns`, `industrial-design`) handle repeatable workflows.
-- **Verification pipeline baked in.** Fastest-first: detekt → Android build → iOS link → tests. Stop-on-first-failure.
+- **One shared UI codebase.** Compose Multiplatform renders the same screens on Android and iOS.
+- **Feature-first modular architecture.** Feature modules for product areas (`:feature:*:api` + `:feature:*:impl`), data modules for business domains (`:data:*`), small core/common modules for reusable infrastructure (`:core:*`). Shared Compose UI and ViewModels live in each module's `commonMain`.
+- **Type-safe navigation.** Navigation 3 with `@Serializable` routes per feature — no string paths, no manual deep-link wiring. Routes live in each feature's `:api` module.
+- **Persistence that works on both platforms.** Room KMP with `BundledSQLiteDriver` — DAOs/entities in `:data:*`, `@Database` aggregated in `:composeApp`, platform-specific DB builders in `androidMain` / `iosMain`.
+- **Networking that respects platform engines.** Ktor client with OkHttp on Android and Darwin on iOS.
+- **A real design system.** [`industrial-design-cmp`](https://github.com/po4yka/industrial-design-cmp) is consumed via JitPack — monochrome palette, bundled fonts, `IndustrialTokens` for spacing/motion/radius.
+- **Strict public-API boundaries.** Kotlin explicit API mode is compiler-enforced on `:core:*` and `:feature:*:api` modules.
+- **Agent rules on day one.** `AGENTS.md` is the canonical source; deep-dive docs live under `docs/`. On-demand skills (`kmp-feature`, `kmp-entity`, `kmp-platform-audit`, `kmp-build`, `compose-patterns`, `industrial-design`) handle repeatable workflows.
+- **Verification pipeline baked in.** Fastest-first: detekt → Android build → iOS link → tests.
 
 ## Tech stack
 
@@ -28,45 +30,66 @@ A production-ready Kotlin Multiplatform template for iOS and Android with shared
 | Images | [Coil 3](https://coil-kt.github.io/coil/) + Ktor network backend | 3.4.0 |
 | Logging | [Kermit](https://kermit.touchlab.co/) | 2.1.0 |
 | Build config | [BuildKonfig](https://github.com/yshrsmz/BuildKonfig) | 0.18.0 |
-| Android Gradle Plugin | AGP | 9.0.1 |
+| Android Gradle Plugin | AGP (`com.android.kotlin.multiplatform.library`) | 9.0.1 |
 | Static analysis | [detekt](https://detekt.dev/) | 1.23.8 |
 
 ## Project structure
 
 ```
 kmp-app/
-├── composeApp/                       # Shared KMP module
+├── androidApp/                        # com.android.application entry point
+├── composeApp/                        # app shell / composition root
 │   └── src/
-│       ├── commonMain/
-│       │   ├── kotlin/com/po4yka/app/
-│       │   │   ├── App.kt            # Root composable, wires AppTheme + navigation
-│       │   │   ├── navigation/       # Nav3 routes + graph assembly
-│       │   │   ├── ui/               # Feature screens + ViewModels + theme
-│       │   │   ├── di/               # Koin modules (shared + expect/actual PlatformModule)
-│       │   │   ├── data/             # Room DAOs, entities, Ktor client factory
-│       │   │   └── platform/         # expect/actual primitives (Platform.kt)
-│       │   └── composeResources/
-│       │       └── values/           # strings.xml (shared across platforms)
-│       ├── androidMain/              # Android actuals: Room DB, Settings, Ktor OkHttp
-│       └── iosMain/                  # iOS actuals: Room DB, Settings, Ktor Darwin, MainViewController
-├── androidApp/                       # Android app entry (com.android.application)
-├── iosApp/                           # iOS SwiftUI wrapper (imports ComposeApp.framework)
-├── gradle/
-│   ├── libs.versions.toml            # Version catalog
-│   └── wrapper/
-├── config/detekt/detekt.yml          # detekt rules
-├── .claude/skills/                   # On-demand Claude Code skills
-│   ├── kmp-feature/
-│   ├── kmp-entity/
-│   ├── kmp-platform-audit/
-│   ├── kmp-build/
-│   ├── compose-patterns/
-│   └── industrial-design/            # Git subtree from industrial-design-cmp
-├── AGENTS.md                         # Canonical agent rules (shared across tools)
-└── CLAUDE.md                         # Thin wrapper that imports AGENTS.md
+│       ├── commonMain/kotlin/com/po4yka/app/
+│       │   ├── App.kt                 # Root composable — AppTheme + AppNavigation
+│       │   ├── Platform.kt            # expect getDatabaseBuilder()
+│       │   ├── data/local/            # AppDatabase (@Database + Room KSP runs here)
+│       │   ├── di/AppModule.kt        # appModules() aggregator
+│       │   └── navigation/AppNavigation.kt  # NavDisplay + polymorphic route registration
+│       ├── androidMain/               # Android actuals (DB builder, Context binding)
+│       └── iosMain/                   # iOS actuals (MainViewController.kt lives here)
+├── core/
+│   ├── common/                        # Kermit, coroutines, datetime
+│   ├── ui/                            # AppTheme wrapping IndustrialTheme + Roborazzi hooks
+│   ├── navigation/                    # Route : NavKey marker
+│   ├── network/                       # HttpClientFactory + networkModule(baseUrl)
+│   └── settings/                      # AppSettings + settingsModule + platformSettingsModule()
+├── data/
+│   └── sample/                        # SampleEntity, SampleDao (kmp-app.kmp-data)
+├── feature/
+│   ├── home/
+│   │   ├── api/                       # HomeRoute (Serializable)
+│   │   └── impl/                      # HomeScreen, HomeViewModel, homeFeatureModule, homeEntries
+│   └── detail/
+│       ├── api/
+│       └── impl/
+├── iosApp/                            # SwiftUI wrapper (imports ComposeApp.framework)
+├── build-logic/                       # Composite build with precompiled convention plugins
+│   └── src/main/kotlin/
+│       ├── kmp-app.kmp-library.gradle.kts
+│       ├── kmp-app.kmp-compose.gradle.kts
+│       ├── kmp-app.kmp-public-library.gradle.kts     # + kotlin { explicitApi() }
+│       ├── kmp-app.kmp-public-compose.gradle.kts     # + kotlin { explicitApi() }
+│       ├── kmp-app.kmp-data.gradle.kts               # + room-runtime + koin + coroutines
+│       ├── kmp-app.kmp-feature-ui.gradle.kts         # + Navigation 3 + koin-compose-viewmodel
+│       ├── kmp-app.android-application.gradle.kts
+│       └── Libs.kt                                   # Version-catalog helper (Project.catalog)
+├── gradle/libs.versions.toml          # Single version catalog
+├── config/detekt/detekt.yml           # detekt rules
+├── docs/                              # Deep-dive companions to AGENTS.md
+│   ├── state-management.md
+│   ├── testing.md
+│   ├── performance.md
+│   ├── variants.md
+│   ├── visibility.md
+│   └── release.md
+├── .claude/skills/                    # On-demand Claude Code skills
+└── .agents/skills/                    # Synced mirror for Codex CLI / Cursor / Gemini / Copilot
+├── AGENTS.md                          # Canonical agent rules (shared across tools)
+└── CLAUDE.md                          # Thin wrapper that imports AGENTS.md
 ```
 
-The project follows the **AGP 9.0 two-module layout**: `composeApp` is a `com.android.kotlin.multiplatform.library` (the KMP shared module, no Application manifest), while `androidApp` is the `com.android.application` entry point that consumes it.
+Module-dependency rules live in **AGENTS.md → Module Boundaries**. A quick summary: features never depend on other features' `:impl` (only `:api` if they need a typed route); `:core:*` depends only on `:core:common` + external libraries; `:composeApp` is the only composition root.
 
 ## Prerequisites
 
@@ -82,7 +105,7 @@ Clone the repo and sync Gradle:
 ```bash
 git clone https://github.com/po4yka/kmp-app.git
 cd kmp-app
-./gradlew help
+./gradlew projects          # lists all modules in the graph
 ```
 
 ### Run on Android
@@ -119,51 +142,74 @@ From the command line (framework only, no Xcode launch):
 `AGENTS.md` codifies the required stop-on-first-failure order. Run locally before pushing:
 
 ```bash
-./gradlew detekt                                                # 1. Static analysis (fastest)
-./gradlew androidApp:assembleDebug                              # 2. Android compiles
-./gradlew composeApp:linkDebugFrameworkIosSimulatorArm64        # 3. iOS links
-./gradlew composeApp:allTests                                   # 4. All KMP tests
+./gradlew detekt                                                # 1. Static analysis (fastest, covers all modules)
+./gradlew androidApp:assembleDebug                              # 2. Android compiles through the full module graph
+./gradlew composeApp:linkDebugFrameworkIosSimulatorArm64        # 3. iOS framework links
+./gradlew composeApp:allTests                                   # 4. composeApp tests
+./gradlew core:settings:allTests                                # 5. per-module tests (add more as modules grow)
+```
+
+Or run everything at once:
+
+```bash
+./gradlew check                                                 # detekt + every module's allTests
 ```
 
 The GitHub Actions workflow runs these on every PR. **Never extend `config/detekt/baseline.xml`** to suppress violations — fix the root cause. This is a blocking rule.
 
 ## Agent configuration
 
-This template is built for AI-assisted development. Both Claude Code and Codex CLI (and Cursor) read the same rules from [`AGENTS.md`](AGENTS.md) — `CLAUDE.md` imports it via `@AGENTS.md`.
+This template is built for AI-assisted development. Claude Code, Codex CLI, Cursor, Gemini CLI, and Copilot read the same rules from [`AGENTS.md`](AGENTS.md) — `CLAUDE.md` imports it via `@AGENTS.md`.
 
 ### Rules (always loaded)
 
-`AGENTS.md` covers: tech stack, module layout, build commands, **verification order**, coding discipline (think-before-coding, simplicity first, surgical changes, goal-driven execution), and **KMP rules** as imperative one-liners:
+`AGENTS.md` covers 13 policy areas as concise imperative sections:
 
-- `expect`/`actual` is for platform wiring only — never business logic
-- Room DAOs must be `suspend` or return `Flow` (iOS linker rejects blocking calls)
-- Use Koin for DI — never Hilt (`hiltViewModel()` won't compile in `commonMain`)
-- `Res.*` for resources in shared code — never `R.*`
-- Navigation routes are `@Serializable` sealed subtypes of `Route : NavKey`
-- Verify KMP targets before adding a dependency (many AndroidX libs are Android-only)
-- No Android-specific imports in `commonMain` (`LocalContext`, `collectAsStateWithLifecycle`, `@Parcelize`, …)
-- Never extend detekt baselines
+| Area | Summary |
+|---|---|
+| **Module Boundaries** | Dep-direction matrix; `:feature:*:impl` ↛ other `:impl`; `:core:*` ↛ `:data:*`/`:feature:*`; `:composeApp` is the only composition root |
+| **Navigation** | `@Serializable` routes in `:api` modules; non-`sealed`; `EntryProviderScope<NavKey>.<name>Entries` extensions; state-scope rules (VM vs `rememberSaveable` vs repository) |
+| **State Management** | Immutable `UiState`; UDF (state down, events up); `Channel<Effect>` for one-shot commands; one state holder per screen |
+| **Platform Boundaries** | Concrete list of services that must go behind a common interface (secure storage, notifications, analytics, biometrics, deep-link, …) |
+| **Data Ownership** | Repositories own data access; features never inject DAOs directly; cross-feature navigation passes IDs only |
+| **Resources** | Per-module `composeResources/`; `Res.*` is module-scoped; never reach into another module's `Res` |
+| **Testing** | `commonTest` matrix, Turbine + coroutines-test for `Flow`, Roborazzi for snapshots |
+| **Performance** | Cold-start / scroll / memory budgets with starter targets on Pixel 6a class; Baseline + Startup Profile workflow |
+| **Build Variants** | Debug/release today; rules for adding staging; per-variant BuildKonfig |
+| **Visibility** | Kotlin explicit API mode compiler-enforced on `:core:*` and `:feature:*:api` |
+| **Dependency Governance** | Single `libs.versions.toml`; convention plugins own recurring dep groups; Renovate auto-bumps |
+| **Code Quality** | detekt config, Android Kotlin style guide, CI hard-fails |
+| **KMP Rules** | `suspend`/`Flow` DAOs, Koin-not-Hilt, KMP-target check, no Android imports in `commonMain`, `expect`/`actual` discipline |
+
+Deep-dive companion docs under [`docs/`](docs/):
+
+- [`docs/state-management.md`](docs/state-management.md) — UDF patterns, VM lifetimes, anti-patterns
+- [`docs/testing.md`](docs/testing.md) — testing matrix + Turbine + Roborazzi workflow
+- [`docs/performance.md`](docs/performance.md) — budgets + Baseline/Startup Profile commands
+- [`docs/variants.md`](docs/variants.md) — current debug/release reality, staging rules
+- [`docs/visibility.md`](docs/visibility.md) — explicit API mode audit guide
+- [`docs/release.md`](docs/release.md) — signing, CI release workflow, TestFlight
 
 ### Skills (on-demand)
 
-Invoked via `/skill-name` in Claude Code, or via keyword match. Loaded only when needed so the always-on context stays lean.
+Invoked via `/<skill>` in Claude Code, or via keyword match. Loaded only when needed so the always-on context stays lean.
 
 | Skill | Use for |
 |-------|---------|
-| `kmp-feature` | Scaffold a new feature: screen + ViewModel + route + DI registration |
-| `kmp-entity` | Add a Room entity + DAO and register in `AppDatabase` |
-| `kmp-platform-audit` | Audit `expect`/`actual` completeness; add a new platform implementation |
-| `kmp-build` | Run the verification pipeline and interpret failures |
+| `kmp-feature` | Scaffold a new feature: `:api` (route) + `:impl` (screen, VM, Koin module, nav entries) + DI aggregation in `:composeApp` |
+| `kmp-entity` | Add a Room entity + DAO to an existing `:data:<domain>` (or scaffold a new one) and register in `:composeApp`'s `AppDatabase` |
+| `kmp-platform-audit` | Audit `expect`/`actual` completeness across all modules; add a new platform implementation |
+| `kmp-build` | Run the verification pipeline and interpret failures (including explicit-API-mode errors) |
 | `compose-patterns` | Compose Multiplatform patterns, anti-patterns, API availability matrix |
 | `industrial-design` | Apply the monochrome design system to a new screen — craft rules, component patterns |
 
 ## Design system
 
-The template consumes [`industrial-design-cmp`](https://github.com/po4yka/industrial-design-cmp) via JitPack. `AppTheme` in `ui/theme/Theme.kt` is a thin wrapper over `IndustrialTheme`:
+The template consumes [`industrial-design-cmp`](https://github.com/po4yka/industrial-design-cmp) via JitPack. `AppTheme` lives in `:core:ui` (`com.po4yka.app.core.ui.theme.AppTheme`) and wraps `IndustrialTheme`:
 
 ```kotlin
 @Composable
-fun AppTheme(
+public fun AppTheme(
     darkTheme: Boolean = isSystemInDarkTheme(),
     content: @Composable () -> Unit,
 ) {
@@ -185,35 +231,50 @@ See the [library README](https://github.com/po4yka/industrial-design-cmp) for th
 
 ## Adding a new feature
 
-The `kmp-feature` skill encodes the recipe — either invoke it from Claude Code or follow manually:
+The `kmp-feature` skill encodes the recipe. Manual path (see the skill for the full scaffolded file list):
 
-1. **Route**: add a `@Serializable` data object or data class inside the `Route` sealed interface in [`navigation/Routes.kt`](composeApp/src/commonMain/kotlin/com/po4yka/app/navigation/Routes.kt).
-2. **ViewModel**: create `<Feature>ViewModel.kt` in `ui/<feature>/`. Keep state in a `StateFlow<T>`, expose semantic events via a single `onEvent(Event)` method.
-3. **Screen**: create `<Feature>Screen.kt`. Takes navigation callbacks as parameters; ViewModel via `koinViewModel()` default.
-4. **DI**: register the ViewModel with `viewModelOf(::<Feature>ViewModel)` in [`di/AppModule.kt`](composeApp/src/commonMain/kotlin/com/po4yka/app/di/AppModule.kt).
-5. **Nav graph**: add an `entry<Route.<Feature>> { … }` block in [`navigation/AppNavigation.kt`](composeApp/src/commonMain/kotlin/com/po4yka/app/navigation/AppNavigation.kt).
-6. **Verify**: run the full pipeline.
+1. **Include both modules in `settings.gradle.kts`:** `include(":feature:<name>:api", ":feature:<name>:impl")`.
+2. **`:feature:<name>:api`** (applies `kmp-app.kmp-public-library`): declare `@Serializable public data object <Feature>Route : Route` (or `data class`). Explicit API mode is enforced.
+3. **`:feature:<name>:impl`** (applies `kmp-app.kmp-feature-ui`): create `<Feature>Screen.kt`, `<Feature>ViewModel.kt`, `<Feature>FeatureModule.kt` (Koin), and `<Feature>NavEntries.kt` (`fun EntryProviderScope<NavKey>.<name>Entries(...)`).
+4. **Wire into `:composeApp`:**
+   - `composeApp/build.gradle.kts`: add `implementation(project(":feature:<name>:api"))` + `:impl`.
+   - `AppModule.kt`: add `<name>FeatureModule` to the `appModules()` list.
+   - `AppNavigation.kt`: register the route serializer (`subclass(<Feature>Route::class, <Feature>Route.serializer())`) and call `<name>Entries(...)` inside the `entryProvider {}` block.
+5. **Verify** with the verification pipeline.
+
+## Adding a Room entity
+
+Use the `kmp-entity` skill. Manual summary:
+
+1. Drop `<Entity>Entity.kt` and `<Entity>Dao.kt` into an existing `:data:<domain>` (or scaffold a new `data/<domain>` module applying `kmp-app.kmp-data`).
+2. Update `:composeApp/src/commonMain/kotlin/com/po4yka/app/data/local/AppDatabase.kt`: add `<Entity>Entity::class` to `@Database(entities = [...])` and add an `abstract fun <entity>Dao(): <Entity>Dao` accessor.
+3. Bind the DAO inside `AppModule.kt`'s `databaseModule`: `single<<Entity>Dao> { get<AppDatabase>().<entity>Dao() }`.
+4. Verify.
+
+All DAO functions must be `suspend` or return `Flow` — blocking DAO calls fail the iOS linker.
 
 ## Customization
 
-This is a starter template — fork or clone, then adjust:
+Fork or clone, then adjust:
 
-1. **Package name**: rename `com.po4yka.app` throughout (search-and-replace across `composeApp/`, `androidApp/`, package declarations, and Gradle namespaces).
-2. **Android IDs**: update `applicationId` in [`androidApp/build.gradle.kts`](androidApp/build.gradle.kts) and `namespace` fields in both `composeApp` and `androidApp` build files.
-3. **iOS bundle ID**: update `binaryOption("bundleId", "…")` in [`composeApp/build.gradle.kts`](composeApp/build.gradle.kts) and the Xcode target in `iosApp/iosApp.xcodeproj`.
+1. **Package name**: rename `com.po4yka.app` throughout (search-and-replace across all modules, package declarations, Android namespaces in each `build.gradle.kts`).
+2. **Android IDs**: update `applicationId` in [`androidApp/build.gradle.kts`](androidApp/build.gradle.kts) and `namespace` fields in every module's `kotlin.androidLibrary { namespace = … }` block.
+3. **iOS bundle ID**: update `binaryOption("bundleId", "…")` in [`build-logic/src/main/kotlin/kmp-app.kmp-library.gradle.kts`](build-logic/src/main/kotlin/kmp-app.kmp-library.gradle.kts) and the Xcode target in `iosApp/iosApp.xcodeproj`.
 4. **App name**: change `APP_NAME` in the BuildKonfig block of `composeApp/build.gradle.kts`.
-5. **Network base URL**: change `BASE_URL` in BuildKonfig, or override per-environment via `defaultConfigs`/`flavors`.
-6. **Entities**: add Room `@Entity` classes and DAOs in `data/local/` (use the `kmp-entity` skill).
-7. **Settings keys**: extend or replace the settings schema in `data/settings/`.
-8. **Design system**: fork `industrial-design-cmp` or swap the dependency for your own `MaterialTheme` — `AppTheme.kt` is one file.
+5. **Network base URL**: change `BASE_URL` in BuildKonfig. Features receive the baseline URL via `networkModule(BuildKonfig.BASE_URL)` — they never read `BuildKonfig` directly.
+6. **Entities**: add Room `@Entity` classes in `data/<domain>/` (use the `kmp-entity` skill).
+7. **Settings keys**: extend the `AppSettings` class in `:core:settings`.
+8. **Design system**: fork `industrial-design-cmp` or swap the dependency for your own `MaterialTheme` — `AppTheme.kt` in `:core:ui` is one file.
 
 ## Troubleshooting
 
-**"`Res.*` imports unresolved"** — the `Res` class regenerates when fonts or strings change. Run `./gradlew composeApp:generateComposeResClass` or clean + rebuild.
+**"`Res.*` imports unresolved"** — the `Res` class regenerates per-module when fonts or strings change. Run `./gradlew <module>:generateComposeResClass` (e.g., `./gradlew composeApp:generateComposeResClass`) or clean + rebuild.
 
-**"iOS framework won't link"** — verify `isStatic = true` in `composeApp/build.gradle.kts` and that Xcode's "Link Binary with Libraries" references `ComposeApp.framework`. For simulator runs, use `iosSimulatorArm64`; for Apple silicon devices, `iosArm64`.
+**"`Visibility must be specified in explicit API mode`"** — this comes from `:core:*` or `:feature:*:api` modules where Kotlin explicit API mode is enforced. Add `public` or `internal` to the declaration, and an explicit return type for functions/properties. See [`docs/visibility.md`](docs/visibility.md).
 
-**"Room compiler doesn't run on iOS targets"** — ensure KSP is registered for each iOS target in the root `dependencies { }` block, as the template already does:
+**"iOS framework won't link"** — verify `isStatic = true` in `build-logic/src/main/kotlin/kmp-app.kmp-library.gradle.kts` and that Xcode's "Link Binary with Libraries" references `ComposeApp.framework`. For simulator runs, use `iosSimulatorArm64`; for Apple silicon devices, `iosArm64`.
+
+**"Room compiler doesn't run on iOS targets"** — ensure KSP is registered for each iOS target in `composeApp/build.gradle.kts`'s `dependencies { }` block, as the template already does:
 
 ```kotlin
 dependencies {
@@ -223,6 +284,8 @@ dependencies {
     add("kspIosArm64", libs.room.compiler)
 }
 ```
+
+**"`EntryProviderBuilder` unresolved"** — the Navigation 3 class is called `EntryProviderScope`, not `EntryProviderBuilder`. Use `fun EntryProviderScope<NavKey>.<name>Entries(...)`.
 
 **"JitPack dependency won't resolve"** — make sure `maven("https://jitpack.io")` is in `settings.gradle.kts` under `dependencyResolutionManagement.repositories`. First-time resolution of a new version triggers a JitPack build and can take several minutes; subsequent builds use the cache.
 
