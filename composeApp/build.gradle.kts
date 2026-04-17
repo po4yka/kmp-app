@@ -87,6 +87,9 @@ kotlin {
 
             // Data - Settings
             implementation(libs.multiplatform.settings)
+
+            // Design system
+            implementation(libs.industrial.design)
         }
 
         commonTest.dependencies {
