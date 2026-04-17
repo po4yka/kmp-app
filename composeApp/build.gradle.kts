@@ -125,3 +125,8 @@ buildkonfig {
         buildConfigField(STRING, "BASE_URL", "https://api.example.com")
     }
 }
+
+compose.resources {
+    publicResClass = false
+    packageOfResClass = "com.po4yka.app.resources"
+}
