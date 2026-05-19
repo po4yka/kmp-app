@@ -1,6 +1,7 @@
 package com.po4yka.app.konsist
 
 import com.lemonappdev.konsist.api.Konsist
+import com.lemonappdev.konsist.api.provider.modifier.KoVisibilityModifierProvider
 import com.lemonappdev.konsist.api.verify.assertTrue
 import org.junit.jupiter.api.Test
 
@@ -23,16 +24,34 @@ class VisibilityTest {
 
     @Test
     fun `top-level declarations in public-surface modules use explicit visibility`() {
-        Konsist.scopeFromProject()
-            .declarations(includeNested = false, includeLocal = false)
-            .filter { decl ->
-                publicSurfaceModuleSegments.any { decl.path.contains(it) }
+        val files = Konsist.scopeFromProject()
+            .files
+            .filter { file ->
+                // Only main source sets — Kotlin's explicit API mode doesn't apply to
+                // commonTest / androidUnitTest / iosTest. The folder convention is
+                // src/<name>Main/kotlin for main, src/<name>Test/kotlin for tests.
+                file.path.contains("Main/kotlin/") &&
+                    publicSurfaceModuleSegments.any { file.path.contains(it) }
             }
-            .assertTrue(
-                additionalMessage = "Public-surface modules require explicit `public` or `internal` " +
-                    "on every top-level declaration (explicit API mode).",
-            ) { decl ->
-                decl.hasPublicOrInternalModifier || decl.hasPrivateModifier
-            }
+
+        val message = "Public-surface modules require explicit `public` or `internal` " +
+            "on every top-level declaration (explicit API mode)."
+
+        // KoBaseDeclaration does not carry the visibility-modifier provider, so iterate by
+        // concrete typed accessor — each return type implements KoVisibilityModifierProvider.
+        files.flatMap { it.classes() }
+            .assertTrue(additionalMessage = message, function = ::hasExplicitVisibility)
+        files.flatMap { it.interfaces() }
+            .assertTrue(additionalMessage = message, function = ::hasExplicitVisibility)
+        files.flatMap { it.objects() }
+            .assertTrue(additionalMessage = message, function = ::hasExplicitVisibility)
+        files.flatMap { it.functions(includeNested = false, includeLocal = false) }
+            .assertTrue(additionalMessage = message, function = ::hasExplicitVisibility)
+        files.flatMap { it.properties(includeNested = false) }
+            .assertTrue(additionalMessage = message, function = ::hasExplicitVisibility)
     }
+
+    private fun hasExplicitVisibility(decl: KoVisibilityModifierProvider): Boolean =
+        decl.hasPublicModifier || decl.hasInternalModifier ||
+            decl.hasPrivateModifier || decl.hasProtectedModifier
 }
