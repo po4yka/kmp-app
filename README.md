@@ -11,8 +11,11 @@ A production-ready Kotlin Multiplatform template for iOS and Android with shared
 - **Networking that respects platform engines.** Ktor client with OkHttp on Android and Darwin on iOS.
 - **A real design system.** [`industrial-design-cmp`](https://github.com/po4yka/industrial-design-cmp) is consumed via JitPack — monochrome palette, bundled fonts, `IndustrialTokens` for spacing/motion/radius.
 - **Strict public-API boundaries.** Kotlin explicit API mode is compiler-enforced on `:core:*` and `:feature:*:api` modules.
-- **Agent rules on day one.** `AGENTS.md` is the canonical source; deep-dive docs live under `docs/`. On-demand skills (`kmp-feature`, `kmp-entity`, `kmp-platform-audit`, `kmp-build`, `compose-patterns`, `industrial-design`) handle repeatable workflows.
-- **Verification pipeline baked in.** Fastest-first: detekt → Android build → iOS link → tests.
+- **Agent rules on day one.** `AGENTS.md` is the canonical source; deep-dive docs live under `docs/`. On-demand skills (`kmp-feature`, `kmp-entity`, `kmp-platform-audit`, `kmp-build`, `kmp-module-graph`, `kmp-strings`, `kmp-baseline-profile`, `kmp-release`, `compose-patterns`, `industrial-design`) handle repeatable workflows.
+- **Architecture as code.** [Konsist](https://github.com/LemonAppDev/konsist) tests in `:tests:konsist` enforce the module-boundary table in `AGENTS.md` on every CI run.
+- **Dependency hygiene.** [Dependency Analysis Gradle Plugin](https://github.com/autonomousapps/dependency-analysis-gradle-plugin) (`./gradlew buildHealth`) keeps `api` vs `implementation` discipline honest across the multi-module graph.
+- **Crash telemetry wired but opt-in.** [Sentry KMP](https://github.com/getsentry/sentry-kotlin-multiplatform) initialized from `App()` — no-op until `SENTRY_DSN` is provided (see `docs/sentry.md`).
+- **Verification pipeline baked in.** Fastest-first: detekt → Konsist → buildHealth → Android build → iOS link → tests.
 
 ## Tech stack
 
@@ -200,6 +203,10 @@ Invoked via `/<skill>` in Claude Code, or via keyword match. Loaded only when ne
 | `kmp-entity` | Add a Room entity + DAO to an existing `:data:<domain>` (or scaffold a new one) and register in `:composeApp`'s `AppDatabase` |
 | `kmp-platform-audit` | Audit `expect`/`actual` completeness across all modules; add a new platform implementation |
 | `kmp-build` | Run the verification pipeline and interpret failures (including explicit-API-mode errors) |
+| `kmp-module-graph` | Author and run Konsist architecture tests against the module-boundary table |
+| `kmp-strings` | Extract hardcoded user-facing strings to per-module `composeResources/values/strings.xml` |
+| `kmp-baseline-profile` | Generate Baseline + Startup Profiles via Macrobenchmark for the 3 perf-critical journeys |
+| `kmp-release` | Cut a release — version bump, changelog, tag, signed artifacts for Android + iOS framework |
 | `compose-patterns` | Compose Multiplatform patterns, anti-patterns, API availability matrix |
 | `industrial-design` | Apply the monochrome design system to a new screen — craft rules, component patterns |
 

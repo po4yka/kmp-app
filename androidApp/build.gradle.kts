@@ -27,7 +27,8 @@ android {
 }
 
 dependencies {
-    implementation(project(":composeApp"))
+    implementation(project(":shared"))
     implementation(libs.androidx.activity.compose)
     implementation(libs.koin.core)
+    implementation(libs.koin.android)
 }

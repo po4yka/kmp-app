@@ -13,6 +13,10 @@ pluginManagement {
     }
 }
 
+plugins {
+    id("org.gradle.toolchains.foojay-resolver-convention") version "1.0.0"
+}
+
 dependencyResolutionManagement {
     repositories {
         google {
@@ -28,7 +32,7 @@ dependencyResolutionManagement {
 }
 
 rootProject.name = "kmp-app"
-include(":composeApp")
+include(":shared")
 include(":androidApp")
 
 // Core infrastructure modules (framework glue; depend only on :core:common + external libs)
@@ -46,3 +50,6 @@ include(":feature:home:api")
 include(":feature:home:impl")
 include(":feature:detail:api")
 include(":feature:detail:impl")
+
+// Test-only modules
+include(":tests:konsist")

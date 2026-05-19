@@ -196,10 +196,12 @@ See `docs/variants.md` for signing matrix, environment rules, and how to add a `
 Run these after every change, in this order — fastest-first. Stop on the first failure; fix it before continuing.
 
 1. `./gradlew detekt`
-2. `./gradlew androidApp:assembleDebug`
-3. `./gradlew composeApp:linkDebugFrameworkIosSimulatorArm64`
-4. `./gradlew composeApp:allTests`
-5. `./gradlew core:settings:allTests` (any module with its own tests)
+2. `./gradlew :tests:konsist:test` (architecture rules from this AGENTS.md)
+3. `./gradlew buildHealth` (DAGP — dependency hygiene; warnings only by default)
+4. `./gradlew androidApp:assembleDebug`
+5. `./gradlew composeApp:linkDebugFrameworkIosSimulatorArm64`
+6. `./gradlew composeApp:allTests`
+7. `./gradlew core:settings:allTests` (any module with its own tests)
 
 ## Coding Discipline
 
@@ -277,4 +279,8 @@ On-demand skills (`Skill` tool / `/<name>`) exist for repeatable workflows — u
 - `kmp-entity` — add a Room entity + DAO to an existing `:data:<domain>` module (or scaffold a new one), then register in `:composeApp`'s `AppDatabase`
 - `kmp-platform-audit` — audit `expect/actual` completeness across all modules, add a new platform implementation
 - `kmp-build` — run the verification pipeline
+- `kmp-module-graph` — author and run Konsist architecture tests enforcing the module-boundary table above
+- `kmp-strings` — extract hardcoded user-facing strings to per-module `composeResources/values/strings.xml`
+- `kmp-baseline-profile` — generate Baseline + Startup Profiles for the perf-critical journeys in `docs/performance.md`
+- `kmp-release` — cut a release: version bump, changelog, tag, signed artifacts
 - `compose-patterns` — Compose Multiplatform coding rules, anti-patterns, and API availability
