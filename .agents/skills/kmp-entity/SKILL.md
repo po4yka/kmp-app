@@ -6,7 +6,7 @@ argument-hint: [EntityName] [domain]
 
 # Add Room Entity
 
-Add a new Room entity **$ARGUMENTS** to the appropriate `:data:<domain>` module and wire it into `:composeApp/…/AppDatabase.kt`.
+Add a new Room entity **$ARGUMENTS** to the appropriate `:data:<domain>` module and wire it into `:shared/…/AppDatabase.kt`.
 
 ## Decide where it goes
 
@@ -78,17 +78,17 @@ interface <Entity>Dao {
 
 All DAO functions must be `suspend` or return `Flow` (iOS linker rule — see AGENTS.md).
 
-### 5. (New domain only) Add the project dep to `:composeApp`
+### 5. (New domain only) Add the project dep to `:shared`
 
-In `composeApp/build.gradle.kts`:
+In `shared/build.gradle.kts`:
 
 ```kotlin
 implementation(project(":data:<domain>"))
 ```
 
-### 6. Register in `:composeApp`'s `AppDatabase`
+### 6. Register in `:shared`'s `AppDatabase`
 
-Edit `composeApp/src/commonMain/kotlin/com/po4yka/app/data/local/AppDatabase.kt`:
+Edit `shared/src/commonMain/kotlin/com/po4yka/app/shared/data/local/AppDatabase.kt`:
 
 1. Import the new entity and DAO:
    ```kotlin
@@ -99,9 +99,9 @@ Edit `composeApp/src/commonMain/kotlin/com/po4yka/app/data/local/AppDatabase.kt`
 3. Increment `version` if this is not the initial schema.
 4. Add accessor: `abstract fun <entity>Dao(): <Entity>Dao`.
 
-### 7. Bind the DAO in `:composeApp`'s Koin graph
+### 7. Bind the DAO in `:shared`'s Koin graph
 
-Edit `composeApp/src/commonMain/kotlin/com/po4yka/app/di/AppModule.kt`. Inside the private `databaseModule`:
+Edit `shared/src/commonMain/kotlin/com/po4yka/app/shared/di/AppModule.kt`. Inside the private `databaseModule`:
 
 ```kotlin
 single<<Entity>Dao> { get<AppDatabase>().<entity>Dao() }
@@ -116,8 +116,8 @@ Run the `kmp-build` skill, or:
 ```bash
 ./gradlew detekt
 ./gradlew androidApp:assembleDebug
-./gradlew composeApp:linkDebugFrameworkIosSimulatorArm64
-./gradlew composeApp:allTests
+./gradlew shared:linkDebugFrameworkIosSimulatorArm64
+./gradlew shared:allTests
 ```
 
-Room schema is exported to `composeApp/schemas/` on successful build.
+Room schema is exported to `shared/schemas/` on successful build. Commit the exported schema files.

@@ -2,7 +2,7 @@
 
 ## Where entities and DAOs live
 
-Every entity + DAO lives in a `:data:<domain>` module (e.g., `:data:sample`). The `@Database` itself lives in `:composeApp` so Room KSP only runs there once across the graph.
+Every entity + DAO lives in a `:data:<domain>` module (e.g., `:data:sample`). The `@Database` itself lives in `:shared` so Room KSP only runs there once across the graph.
 
 ```
 :data:sample/src/commonMain/kotlin/com/po4yka/app/data/sample/
@@ -68,9 +68,9 @@ interface SampleDao {
 - Every DAO function is `suspend` or returns `Flow` — blocking DAO calls fail the iOS linker.
 - Functions returning `Flow` must NOT be `suspend`.
 
-## Database registration (lives in `:composeApp`)
+## Database registration (lives in `:shared`)
 
-`composeApp/src/commonMain/kotlin/com/po4yka/app/data/local/AppDatabase.kt`:
+`shared/src/commonMain/kotlin/com/po4yka/app/shared/data/local/AppDatabase.kt`:
 
 1. Import the new entity + DAO from the `:data:<domain>` module.
 2. Add entity to `@Database(entities = [..., <Entity>Entity::class])`.
@@ -86,9 +86,9 @@ abstract class AppDatabase : RoomDatabase() {
 }
 ```
 
-## Koin registration (also in `:composeApp`)
+## Koin registration (also in `:shared`)
 
-`composeApp/src/commonMain/kotlin/com/po4yka/app/di/AppModule.kt`, inside the private `databaseModule`:
+`shared/src/commonMain/kotlin/com/po4yka/app/shared/di/AppModule.kt`, inside the private `databaseModule`:
 
 ```kotlin
 private val databaseModule: Module = module {
@@ -101,11 +101,11 @@ private val databaseModule: Module = module {
 
 ## Schema Exports
 
-Room schemas are auto-exported to `composeApp/schemas/` on every build with a successful `@Database` compilation. Commit them.
+Room schemas are auto-exported to `shared/schemas/` on every build with a successful `@Database` compilation. Commit them.
 
 ## Driver
 
-`BundledSQLiteDriver` is used across Android and iOS, wired in `composeApp`'s platform modules via `.setDriver(BundledSQLiteDriver())`. No per-platform driver work is needed when adding a new entity.
+`BundledSQLiteDriver` is used across Android and iOS, wired in `:shared`'s `PlatformModule` actuals via `.setDriver(BundledSQLiteDriver())`. No per-platform driver work is needed when adding a new entity.
 
 ## Future: repositories over DAOs
 

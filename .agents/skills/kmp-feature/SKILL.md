@@ -11,7 +11,7 @@ Create feature **$ARGUMENTS** following the feature-first module layout. Every f
 - `:feature:<name>:api` — the typed route (only thing other modules are allowed to depend on).
 - `:feature:<name>:impl` — screen, ViewModel, Koin module, Nav3 entries.
 
-Use lowercase for `<name>` (e.g., `Profile` → `profile`). The app shell (`:composeApp`) wires the impl into navigation and DI.
+Use lowercase for `<name>` (e.g., `Profile` → `profile`). The app shell (`:shared`) wires the impl into navigation and DI.
 
 ## Steps
 
@@ -155,16 +155,16 @@ fun EntryProviderScope<NavKey>.<name>Entries(
 
 The receiver is `EntryProviderScope<NavKey>` — the builder type in Navigation 3. `entry<T>` is a member method of that scope, not a package-level function.
 
-### 9. Wire into `:composeApp`
+### 9. Wire into `:shared`
 
-In `composeApp/build.gradle.kts`, add both project deps:
+In `shared/build.gradle.kts`, add both project deps:
 
 ```kotlin
 implementation(project(":feature:<name>:api"))
 implementation(project(":feature:<name>:impl"))
 ```
 
-In `composeApp/src/commonMain/kotlin/com/po4yka/app/di/AppModule.kt`, add the feature module to `appModules()`:
+In `shared/src/commonMain/kotlin/com/po4yka/app/shared/di/AppModule.kt`, add the feature module to `appModules()`:
 
 ```kotlin
 import com.po4yka.app.feature.<name>.impl.<name>FeatureModule
@@ -175,7 +175,7 @@ fun appModules(): List<Module> = listOf(
 )
 ```
 
-In `composeApp/src/commonMain/kotlin/com/po4yka/app/navigation/AppNavigation.kt`:
+In `shared/src/commonMain/kotlin/com/po4yka/app/shared/navigation/AppNavigation.kt`:
 
 1. Add the route to the polymorphic `SerializersModule`:
    ```kotlin
@@ -193,6 +193,6 @@ Run the `kmp-build` skill, or:
 ```bash
 ./gradlew detekt
 ./gradlew androidApp:assembleDebug
-./gradlew composeApp:linkDebugFrameworkIosSimulatorArm64
-./gradlew composeApp:allTests
+./gradlew shared:linkDebugFrameworkIosSimulatorArm64
+./gradlew shared:allTests
 ```

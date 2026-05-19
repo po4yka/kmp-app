@@ -27,15 +27,15 @@ This pulls the full module graph through KSP (Room), Compose compiler, and the `
 ## 3. iOS Framework
 
 ```bash
-./gradlew composeApp:linkDebugFrameworkIosSimulatorArm64
+./gradlew shared:linkDebugFrameworkIosSimulatorArm64
 ```
 
-Produces `ComposeApp.framework` for the iOS simulator. iOS-side `actual` impls compile here; failures here usually mean a missing `actual` in `iosMain`.
+Produces `Shared.framework` for the iOS simulator. iOS-side `actual` impls compile here; failures here usually mean a missing `actual` in `iosMain`.
 
 ## 4. Tests
 
 ```bash
-./gradlew composeApp:allTests
+./gradlew shared:allTests
 ./gradlew core:settings:allTests       # run for any module that has its own tests
 ```
 
@@ -51,6 +51,6 @@ After all steps complete, report:
 - Any detekt violations with rule names
 - Any explicit-API-mode violations (errors saying "Visibility must be specified in explicit API mode" or "Return type must be specified in explicit API mode") — fix by adding `public` / `internal` + an explicit return type in the owning module's source
 
-Per-module failures point at the owning module, not `:composeApp`. If `:data:sample` fails to compile, fix it there — don't patch around it in the app shell.
+Per-module failures point at the owning module, not `:shared`. If `:data:sample` fails to compile, fix it there — don't patch around it in the app shell.
 
 If all pass, confirm the project is in a clean state.

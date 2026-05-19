@@ -10,12 +10,12 @@ Audit expect/actual declarations and platform-specific code in this project.
 
 ## Steps
 
-Scan every module — not just `:composeApp`. Module roots: `composeApp/`, `core/*/`, `data/*/`, `feature/*/api/`, `feature/*/impl/`.
+Scan every module — not just `:shared`. Module roots: `shared/`, `core/*/`, `data/*/`, `feature/*/api/`, `feature/*/impl/`.
 
 ### 1. Find all expect declarations in commonMain across all modules
 
 ```
-grep -rn "^expect " composeApp/src/commonMain composeApp/src/iosMain composeApp/src/androidMain core/ data/ feature/ 2>/dev/null | grep "commonMain"
+grep -rn "^expect " shared/src/commonMain shared/src/iosMain shared/src/androidMain core/ data/ feature/ 2>/dev/null | grep "commonMain"
 ```
 
 List every `expect` class, function, and property found, grouped by module.
@@ -39,7 +39,7 @@ Flag any function that is neither `suspend` nor returns `Flow`.
 ### 4. Check for Android-specific imports in any commonMain
 
 ```
-grep -rn "^import android\.\|^import androidx\.activity\." composeApp/src/commonMain core/*/src/commonMain data/*/src/commonMain feature/*/*/src/commonMain 2>/dev/null
+grep -rn "^import android\.\|^import androidx\.activity\." shared/src/commonMain core/*/src/commonMain data/*/src/commonMain feature/*/*/src/commonMain 2>/dev/null
 ```
 
 Any match is a platform leak — report the file and line.
@@ -47,7 +47,7 @@ Any match is a platform leak — report the file and line.
 ### 5. Check for iOS-specific imports in any commonMain
 
 ```
-grep -rn "^import platform\." composeApp/src/commonMain core/*/src/commonMain data/*/src/commonMain feature/*/*/src/commonMain 2>/dev/null
+grep -rn "^import platform\." shared/src/commonMain core/*/src/commonMain data/*/src/commonMain feature/*/*/src/commonMain 2>/dev/null
 ```
 
 Any match is a platform leak — report the file and line.
@@ -56,7 +56,7 @@ Any match is a platform leak — report the file and line.
 
 ```
 ./gradlew androidApp:assembleDebug
-./gradlew composeApp:linkDebugFrameworkIosSimulatorArm64
+./gradlew shared:linkDebugFrameworkIosSimulatorArm64
 ```
 
 Report build success or failure for each platform.
@@ -83,7 +83,7 @@ When a new capability needs platform-specific code, use this flow instead of the
 
 For interfaces, put the interface in the relevant common package (e.g., `platform/`, `data/`, or the feature package).
 
-For `expect/actual`, put the `expect fun` / `expect class` / `expect val` in the commonMain of the module that owns the primitive (e.g., `core/settings` owns `platformSettingsModule`; `:composeApp` owns `getDatabaseBuilder`). Do NOT put cross-cutting primitives in `:core:common` unless every module genuinely needs them.
+For `expect/actual`, put the `expect fun` / `expect class` / `expect val` in the commonMain of the module that owns the primitive (e.g., `core/settings` owns `platformSettingsModule`; `:shared` owns the per-platform `PlatformModule.<plat>.kt` actuals that bind `AppDatabase` via `Room.databaseBuilder`). Do NOT put cross-cutting primitives in `:core:common` unless every module genuinely needs them.
 
 Keep the surface minimal — expose only what `commonMain` actually needs.
 
@@ -98,9 +98,9 @@ Interface impls go as regular classes (`class AndroidPlayer(private val context:
 
 ### 4. Wire DI if needed
 
-If the capability is injected, add Koin bindings in the owning module's `platform<X>Module()` expect/actual pair. For example, `:core:settings/src/androidMain/.../SettingsModule.android.kt` binds the Android `Settings` impl; `:composeApp/src/androidMain/.../di/PlatformModule.android.kt` binds the `AppDatabase` and Android `Context`.
+If the capability is injected, add Koin bindings in the owning module's `platform<X>Module()` expect/actual pair. For example, `:core:settings/src/androidMain/.../SettingsModule.android.kt` binds the Android `Settings` impl; `:shared/src/androidMain/.../di/PlatformModule.android.kt` binds `AppDatabase` (Android `Context` is auto-resolved via Koin's `androidContext()` set in `MainApplication`).
 
-Do NOT push platform bindings into `:composeApp` when they belong to a more focused module (e.g., a video player's Android impl should live in the feature or core module that owns the `Player` interface, not in the app shell).
+Do NOT push platform bindings into `:shared` when they belong to a more focused module (e.g., a video player's Android impl should live in the feature or core module that owns the `Player` interface, not in the app shell).
 
 ### 5. Verify
 
@@ -109,8 +109,8 @@ Run the full verification pipeline:
 ```
 ./gradlew detekt
 ./gradlew androidApp:assembleDebug
-./gradlew composeApp:linkDebugFrameworkIosSimulatorArm64
-./gradlew composeApp:allTests
+./gradlew shared:linkDebugFrameworkIosSimulatorArm64
+./gradlew shared:allTests
 ```
 
 Stop on the first failure — fix it before continuing.
