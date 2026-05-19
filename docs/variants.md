@@ -14,7 +14,7 @@ Signing config is defined in `androidApp/build.gradle.kts` (`android { buildType
 ## Rules
 
 - **All per-variant constants live in BuildKonfig fields or CI env vars.** Never hardcode an `if (BuildConfig.DEBUG)` branch inside feature code to toggle a URL or a feature flag — when the rule breaks down, the feature module ends up depending on `BuildConfig`, which it must not.
-- **Config access goes through a typed wrapper.** `BuildKonfig.BASE_URL` is read in one place (`:composeApp/di/AppModule.kt` when calling `networkModule(BuildKonfig.BASE_URL)`). Features receive the baseline URL via Koin — they don't read BuildKonfig directly.
+- **Config access goes through a typed wrapper.** `BuildKonfig.BASE_URL` is read in one place (`:shared/di/AppModule.kt` when calling `networkModule(BuildKonfig.BASE_URL)`). Features receive the baseline URL via Koin — they don't read BuildKonfig directly.
 - **Application IDs** use `applicationIdSuffix` when variants need to install side-by-side. Base ID (`com.po4yka.app`) stays constant; variants add `.debug`, `.staging` as needed. This keeps the release-variant ID stable across the app's lifetime.
 
 ## Adding `staging`

@@ -9,10 +9,10 @@ Long-form companion to the **Testing** section of `AGENTS.md`. Describes what ge
 | Pure logic (reducers, mappers, validators) | `commonTest` | every module that has logic | `:core:settings`, `:feature:home:impl` |
 | ViewModel with fake deps | `commonTest` of feature `:impl` | `:feature:*:impl` | `HomeViewModelTest` |
 | Repository with in-memory Room | `commonTest` of `:data:*` | `:data:*` | `SampleRepositoryTest` (when repo exists) |
-| Platform actuals (DB builder, Settings impl, Ktor engine wiring) | `androidMain`/`iosMain` tests | the module that owns the `actual` | `:core:settings`, `:composeApp` |
+| Platform actuals (DB builder, Settings impl, Ktor engine wiring) | `androidMain`/`iosMain` tests | the module that owns the `actual` | `:core:settings`, `:shared` |
 | Compose UI snapshots | `androidUnitTest` + Roborazzi | module whose UI is under test | `:core:ui`, future `:feature:*:impl` |
-| Integration / end-to-end UI | `androidInstrumentedTest` (future) | `:composeApp` | happy-path flows |
-| Performance | `:composeApp/benchmarks` (future) | `:composeApp` | cold start, scroll, nav |
+| Integration / end-to-end UI | `androidInstrumentedTest` (future) | `:shared` | happy-path flows |
+| Performance | `:shared/benchmarks` (future) | `:shared` | cold start, scroll, nav |
 
 One column per source set; one row per behaviour class. If a test doesn't fit any row, ask whether it's a real test or a missing production abstraction.
 
@@ -55,7 +55,7 @@ class HomeViewModelTest {
 Each `actual` implementation deserves a test in its own source set:
 
 - `:core:settings/src/androidUnitTest/...` — `SharedPreferencesSettings` round-trip (needs Robolectric).
-- `:composeApp/src/iosTest/...` — `getDatabaseBuilder()` iOS path construction.
+- `:shared/src/iosTest/...` — `platformModule()` iOS path construction via `NSFileManager`.
 
 iOS tests run via `:core:settings:iosSimulatorArm64Test` etc. Android unit tests are blocked on AGP 9.0 (see caveat below).
 
@@ -69,7 +69,7 @@ iOS tests run via `:core:settings:iosSimulatorArm64Test` etc. Android unit tests
 
 ## Integration + instrumentation
 
-Reserved for `:composeApp` once:
+Reserved for `:shared` once:
 1. AGP unblocks Android unit tests on KMP libraries, or
 2. A dedicated Android app module hosts the instrumentation suite.
 
@@ -82,7 +82,7 @@ See `docs/performance.md`. Macrobenchmark runs from a future `benchmarks` module
 ## Execution
 
 ```bash
-./gradlew composeApp:allTests              # common + ios tests in composeApp
+./gradlew shared:allTests              # common + ios tests in shared
 ./gradlew core:settings:allTests           # per-module
 ./gradlew check                            # everything
 ```

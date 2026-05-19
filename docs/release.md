@@ -95,8 +95,8 @@ To enable it:
 
 The `release-ios` job builds two Kotlin/Native release frameworks:
 
-- `composeApp/build/bin/iosArm64/releaseFramework/` — device slice
-- `composeApp/build/bin/iosSimulatorArm64/releaseFramework/` — simulator slice
+- `shared/build/bin/iosArm64/releaseFramework/` — device slice
+- `shared/build/bin/iosSimulatorArm64/releaseFramework/` — simulator slice
 
 Both are uploaded as a workflow artifact named `release-framework-<tag>`.
 

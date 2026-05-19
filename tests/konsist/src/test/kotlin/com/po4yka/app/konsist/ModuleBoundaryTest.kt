@@ -26,7 +26,7 @@ class ModuleBoundaryTest {
             }
             .assertEmpty(
                 additionalMessage = "Feature :impl modules must not import another feature :impl. " +
-                    "Cross-feature navigation goes through callbacks wired in :composeApp.",
+                    "Cross-feature navigation goes through callbacks wired in :shared.",
             )
     }
 

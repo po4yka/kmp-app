@@ -65,7 +65,7 @@ Key naming: `<screen>_<role>` (e.g., `home_title`, `detail_save_button`). Avoid 
 
 ## 4. Wire keys into Kotlin
 
-The generated `Res` class lives in each module's package (per `composeApp/build.gradle.kts` and feature build files: `packageOfResClass = "com.po4yka.app.resources"` for `:composeApp`, similar for features). Imports:
+The generated `Res` class lives in each module's package (per `shared/build.gradle.kts` and feature build files: `packageOfResClass = "com.po4yka.app.resources"` for `:shared`, similar for features). Imports:
 
 ```kotlin
 import <module-package>.generated.resources.Res
@@ -85,9 +85,9 @@ Text(pluralStringResource(Res.plurals.item_count, count, count))
 
 ## 5. Cross-module rule
 
-If two modules need the same string, **copy it** or **promote it to `:composeApp/src/commonMain/composeResources/`**. Never `import othermod.generated.resources.Res` — Compose Resources are per-module by design.
+If two modules need the same string, **copy it** or **promote it to `:shared/src/commonMain/composeResources/`**. Never `import othermod.generated.resources.Res` — Compose Resources are per-module by design.
 
-App-global strings (legal copy, app name, brand strings) belong in `:composeApp`. Feature-specific strings belong in the feature module.
+App-global strings (legal copy, app name, brand strings) belong in `:shared`. Feature-specific strings belong in the feature module.
 
 ## 6. Verify
 

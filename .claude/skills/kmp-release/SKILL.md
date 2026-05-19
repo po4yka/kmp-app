@@ -75,7 +75,7 @@ Run the verification pipeline (matches `AGENTS.md` order):
 ./gradlew buildHealth
 ./gradlew :tests:konsist:test
 ./gradlew androidApp:assembleDebug
-./gradlew composeApp:linkDebugFrameworkIosSimulatorArm64
+./gradlew shared:linkDebugFrameworkIosSimulatorArm64
 ./gradlew check
 ```
 
@@ -85,11 +85,11 @@ Stop on first failure.
 
 ```bash
 ./gradlew androidApp:assembleRelease
-./gradlew composeApp:linkReleaseFrameworkIosArm64
-./gradlew composeApp:linkReleaseFrameworkIosSimulatorArm64
+./gradlew shared:linkReleaseFrameworkIosArm64
+./gradlew shared:linkReleaseFrameworkIosSimulatorArm64
 ```
 
-Signed `.aab` / `.apk` land in `androidApp/build/outputs/`. iOS frameworks in `composeApp/build/bin/`.
+Signed `.aab` / `.apk` land in `androidApp/build/outputs/`. iOS frameworks in `shared/build/bin/`.
 
 ## 7. Commit, tag, push
 

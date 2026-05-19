@@ -67,16 +67,16 @@ jobs:
 
       - name: Build release frameworks
         run: |
-          ./gradlew composeApp:linkReleaseFrameworkIosArm64 \
-                    composeApp:linkReleaseFrameworkIosSimulatorArm64
+          ./gradlew shared:linkReleaseFrameworkIosArm64 \
+                    shared:linkReleaseFrameworkIosSimulatorArm64
 
       - name: Upload iOS framework artifact
         uses: actions/upload-artifact@v4
         with:
           name: release-framework-${{ github.ref_name }}
           path: |
-            composeApp/build/bin/iosArm64/releaseFramework/
-            composeApp/build/bin/iosSimulatorArm64/releaseFramework/
+            shared/build/bin/iosArm64/releaseFramework/
+            shared/build/bin/iosSimulatorArm64/releaseFramework/
           if-no-files-found: error
 
       # CONFIGURE ME: shipping to TestFlight requires additional steps beyond

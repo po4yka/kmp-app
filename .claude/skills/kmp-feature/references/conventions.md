@@ -101,7 +101,7 @@ val <name>FeatureModule: Module = module {
 }
 ```
 
-Each feature exposes exactly one Koin module. `:composeApp/.../di/AppModule.kt` aggregates them all in `appModules()`.
+Each feature exposes exactly one Koin module. `:shared/di/AppModule.kt` aggregates them all in `appModules()`.
 
 ## Navigation Entries (`<Feature>NavEntries.kt`)
 
@@ -124,14 +124,14 @@ fun EntryProviderScope<NavKey>.<name>Entries(
 
 The receiver is `EntryProviderScope<NavKey>` — the lambda receiver of `entryProvider {}` in Navigation 3. `entry<T>` is a member method of that scope.
 
-## App-shell wiring (`:composeApp`)
+## App-shell wiring (`:shared`)
 
-1. `composeApp/build.gradle.kts`:
+1. `shared/build.gradle.kts`:
    ```kotlin
    implementation(project(":feature:<name>:api"))
    implementation(project(":feature:<name>:impl"))
    ```
-2. `composeApp/src/commonMain/kotlin/com/po4yka/app/di/AppModule.kt`:
+2. `shared/src/commonMain/kotlin/com/po4yka/app/shared/di/AppModule.kt`:
    ```kotlin
    import com.po4yka.app.feature.<name>.impl.<name>FeatureModule
 
@@ -140,7 +140,7 @@ The receiver is `EntryProviderScope<NavKey>` — the lambda receiver of `entryPr
        <name>FeatureModule,
    )
    ```
-3. `composeApp/src/commonMain/kotlin/com/po4yka/app/navigation/AppNavigation.kt`:
+3. `shared/src/commonMain/kotlin/com/po4yka/app/shared/navigation/AppNavigation.kt`:
    ```kotlin
    // Register the route serializer
    subclass(<Feature>Route::class, <Feature>Route.serializer())
@@ -162,6 +162,6 @@ Run the `kmp-build` skill, or:
 ```bash
 ./gradlew detekt
 ./gradlew androidApp:assembleDebug
-./gradlew composeApp:linkDebugFrameworkIosSimulatorArm64
-./gradlew composeApp:allTests
+./gradlew shared:linkDebugFrameworkIosSimulatorArm64
+./gradlew shared:allTests
 ```

@@ -52,7 +52,7 @@ Not enforced (intentional — implementation-detail modules):
 
 - `:feature:*:impl` — the intentional public surface is the `<name>FeatureModule` val and the `<name>Entries` extension function; everything else is incidental.
 - `:data:*` — currently open because the data module's consumers are internal to this app. When a `:data:*` module starts being consumed across many features, promote it to `kmp-app.kmp-public-library`.
-- `:composeApp` — app shell; not consumed by anyone else.
+- `:shared` — app shell; not consumed by anyone else.
 - `:androidApp` — Kotlin classes aren't a library surface.
 
 ## Review checklist

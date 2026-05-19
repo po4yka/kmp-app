@@ -4,7 +4,7 @@ Instructions for any AI agent (Claude Code, Codex CLI, Cursor, Gemini CLI, Copil
 
 ## Project Overview
 
-Kotlin Multiplatform template targeting iOS and Android with Compose Multiplatform shared UI. Shared code is split across **feature-first modules** (product areas), **data modules** (business domains), and **core modules** (reusable infrastructure). The `:composeApp` module is the composition root (app shell) that aggregates everything and produces the iOS framework. Platform `actual` implementations live in each module's `androidMain/` and `iosMain/` source sets.
+Kotlin Multiplatform template targeting iOS and Android with Compose Multiplatform shared UI. Shared code is split across **feature-first modules** (product areas), **data modules** (business domains), and **core modules** (reusable infrastructure). The `:shared` module is the composition root (app shell) that aggregates everything and produces the iOS framework. Platform `actual` implementations live in each module's `androidMain/` and `iosMain/` source sets.
 
 ## Tech Stack
 
@@ -12,7 +12,7 @@ Kotlin Multiplatform template targeting iOS and Android with Compose Multiplatfo
 - **KMP library modules use `com.android.kotlin.multiplatform.library`** (via the `kmp-app.kmp-library` convention and its descendants). Never apply `com.android.library` to a KMP module.
 - Navigation 3 (typed `Route : NavKey` interface; routes are per-feature `@Serializable` classes)
 - Koin + Koin Compiler Plugin (DI); one module per policy area (see **Module Boundaries**)
-- Room KMP with `BundledSQLiteDriver`; `@Database` lives in `:composeApp`, DAOs/entities in `:data:*`
+- Room KMP with `BundledSQLiteDriver`; `@Database` lives in `:shared`, DAOs/entities in `:data:*`
 - Ktor client + kotlinx.serialization
 - Multiplatform Settings (`SharedPreferences` / `NSUserDefaults`)
 - Coil 3 with Ktor network backend
@@ -24,12 +24,12 @@ Kotlin Multiplatform template targeting iOS and Android with Compose Multiplatfo
 
 ```
 :androidApp   (com.android.application)
-   └─► :composeApp
+   └─► :shared
 
-:composeApp   (kmp-app.kmp-compose)      — app shell / composition root
+:shared   (kmp-app.kmp-compose)      — app shell / composition root
    │   App.kt, AppNavigation.kt (entryProvider aggregator), MainViewController.kt,
    │   AppDatabase (@Database + Room KSP here), AppModule.kt (DI aggregator),
-   │   Platform.kt (expect getDatabaseBuilder()), BuildKonfig, Coil
+   │   PlatformModule.kt (expect/actual for per-platform Room builder + Koin bindings), BuildKonfig, Coil
    ├─► :core:common, :core:ui, :core:navigation, :core:network, :core:settings
    ├─► :data:sample
    └─► :feature:home:impl, :feature:detail:impl
@@ -51,7 +51,7 @@ Kotlin Multiplatform template targeting iOS and Android with Compose Multiplatfo
                                                     detailFeatureModule, detailEntries(...)
 
 iosApp (Swift, Xcode)
-   └─► imports ComposeApp.framework built from :composeApp
+   └─► imports Shared.framework built from :shared
 ```
 
 Every module (except `:androidApp`) is a KMP library with `commonMain`, `androidMain`, and `iosMain` source sets.
@@ -64,7 +64,7 @@ Within **every** module:
 |------------|-------------------|
 | `commonMain` | Compose UI, ViewModels, Koin modules, Room DAOs/entities, Ktor client, domain models, routes |
 | `androidMain` | Android `actual` impls: DB builder via `Context`, `SharedPreferences` Settings, OkHttp Ktor engine, Android-specific Koin bindings |
-| `iosMain`     | iOS `actual` impls: DB builder via `NSFileManager`, `NSUserDefaults` Settings, Darwin Ktor engine. `MainViewController.kt` lives in `:composeApp/iosMain` specifically. |
+| `iosMain`     | iOS `actual` impls: DB builder via `NSFileManager`, `NSUserDefaults` Settings, Darwin Ktor engine. `MainViewController.kt` lives in `:shared/iosMain` specifically. |
 
 ## Module Boundaries
 
@@ -72,20 +72,20 @@ Dependency rules keep the graph acyclic and the app shell in exclusive control o
 
 **Allowed direction (anything else is a review blocker):**
 
-| From → To | `:core:common` | other `:core:*` | `:data:*` | `:feature:*:api` | `:feature:*:impl` | `:composeApp` |
+| From → To | `:core:common` | other `:core:*` | `:data:*` | `:feature:*:api` | `:feature:*:impl` | `:shared` |
 |---|:---:|:---:|:---:|:---:|:---:|:---:|
 | `:core:common` | — | ✗ | ✗ | ✗ | ✗ | ✗ |
 | other `:core:*` | ✓ | ✗ | ✗ | ✗ | ✗ | ✗ |
 | `:data:*` | ✓ | ✗ | ✗ | ✗ | ✗ | ✗ |
 | `:feature:*:api` | ✓ | ✓ | ✗ | ✗ | ✗ | ✗ |
 | `:feature:*:impl` | ✓ | ✓ | ✓ | ✓ | ✗ | ✗ |
-| `:composeApp` | ✓ | ✓ | ✓ | ✓ | ✓ | — |
+| `:shared` | ✓ | ✓ | ✓ | ✓ | ✓ | — |
 | `:androidApp` | ✗ | ✗ | ✗ | ✗ | ✗ | ✓ |
 
-- **New product areas are `:feature:<name>:api` + `:feature:<name>:impl`.** Scaffold with the `kmp-feature` skill. Never drop screens into `:composeApp` or another feature.
-- **Cross-feature navigation happens via callback props wired by `:composeApp`.** Depend on another feature's `:api` only when the source feature needs to construct that feature's typed route locally.
+- **New product areas are `:feature:<name>:api` + `:feature:<name>:impl`.** Scaffold with the `kmp-feature` skill. Never drop screens into `:shared` or another feature.
+- **Cross-feature navigation happens via callback props wired by `:shared`.** Depend on another feature's `:api` only when the source feature needs to construct that feature's typed route locally.
 - **Business domains live in `:data:<domain>`.** `@Entity`/`@Dao` never appear in a `:feature:*` module.
-- **`:composeApp` is the only composition root.** It owns `AppDatabase`, the Koin aggregator (`appModules()`), and the NavDisplay's `entryProvider` block.
+- **`:shared` is the only composition root.** It owns `AppDatabase`, the Koin aggregator (`appModules()`), and the NavDisplay's `entryProvider` block.
 - **Prefer `implementation(project(...))` over `api(...)`.** `api` is only used on `:core:navigation` (re-exposes Navigation 3) and `:core:common` (re-exposes Kermit/coroutines/datetime).
 - **New repeated build logic goes into a convention plugin.** If the same Gradle block appears in two modules, extract it into `build-logic/` before adding it to a third.
 - **Add a `:feature:<name>:domain` module only when justified.** Triggers: ≥2 repositories orchestrated by the feature, non-trivial state machines, or logic shared across features. Default: no domain layer; put use-case code in the ViewModel or repository.
@@ -105,7 +105,7 @@ Never reapply Compose, Room, or KSP plugins per module when a convention already
 ## Navigation
 
 - Routes are `@Serializable` classes in `:feature:<x>:api`, implementing `com.po4yka.app.core.navigation.Route`. Strings and raw destinations are forbidden.
-- Routes are **not `sealed`** — Kotlin `sealed` can't span modules. Polymorphic registration for saved-state serialization lives once in `composeApp/…/navigation/AppNavigation.kt`'s `SavedStateConfiguration` (explicit `subclass(FooRoute::class, FooRoute.serializer())` for each route).
+- Routes are **not `sealed`** — Kotlin `sealed` can't span modules. Polymorphic registration for saved-state serialization lives once in `shared/…/navigation/AppNavigation.kt`'s `SavedStateConfiguration` (explicit `subclass(FooRoute::class, FooRoute.serializer())` for each route).
 - Each `:feature:<name>:impl` exposes one extension: `fun EntryProviderScope<NavKey>.<name>Entries(...)`. The app shell calls it inside its `entryProvider {}` block. No overloads.
 - Entry decorators are wired once in `AppNavigation`: `rememberSaveableStateHolderNavEntryDecorator()` + `rememberViewModelStoreNavEntryDecorator()`. ViewModels obtained through `koinViewModel()` inside an `entry<...>` block are scoped to that back-stack entry and die when the entry pops.
 - **State scope decision rule:**
@@ -142,7 +142,7 @@ See `docs/state-management.md` for patterns and anti-patterns.
 
 ## Resources
 
-- Strings, drawables, fonts, and plurals for a feature live in that feature's `:impl/src/commonMain/composeResources/`. App-global copy lives in `:composeApp/src/commonMain/composeResources/`.
+- Strings, drawables, fonts, and plurals for a feature live in that feature's `:impl/src/commonMain/composeResources/`. App-global copy lives in `:shared/src/commonMain/composeResources/`.
 - Access via `stringResource(Res.string.x)` / `painterResource(Res.drawable.x)` / `pluralStringResource(Res.plurals.x, count)`. Never `R.string.*` or `R.drawable.*` in shared code.
 - Qualifiers go in hyphenated sibling folders: `values-fr/`, `values-ar/`, `drawable-dark/`, `drawable-xxhdpi/`, `font-sw600dp/`.
 - **No hardcoded user-facing strings in code.** Every user-facing string goes through a `Res.string.*` key — even one-off labels.
@@ -158,8 +158,8 @@ See `docs/testing.md` for the full matrix, fake/mock guidance, Turbine patterns,
 | Pure logic, ViewModels with fakes, serialization | every module's `commonTest` | Business rules, state reducers, DTO round-trips |
 | Platform actuals | `androidMain`/`iosMain` tests | `SharedPreferences` settings, Darwin Ktor, `NSFileManager` paths |
 | Compose UI snapshots | `<module>/androidUnitTest` via Roborazzi | Each golden state per screen (wired once AGP unblocks KMP Android unit tests) |
-| End-to-end UI | `:composeApp/androidInstrumentedTest` (future) | Happy-path flows on a real device |
-| Performance | `:composeApp/benchmarks` (future) | Cold start, nav transition, scroll p95 |
+| End-to-end UI | `:shared/androidInstrumentedTest` (future) | Happy-path flows on a real device |
+| Performance | `:shared/benchmarks` (future) | Cold start, nav transition, scroll p95 |
 
 - Every VM bug fix ships with a `commonTest` that would have caught it.
 - Integration tests hit real Room via `Room.inMemoryDatabaseBuilder` — no mocked DAOs in integration tests.
@@ -186,8 +186,8 @@ See `docs/variants.md` for signing matrix, environment rules, and how to add a `
 ## Build Commands
 
 - Android: `./gradlew androidApp:assembleDebug`
-- iOS framework: `./gradlew composeApp:linkDebugFrameworkIosSimulatorArm64`
-- Tests: `./gradlew composeApp:allTests` (+ per-module `allTests` for modules with their own tests, e.g., `./gradlew core:settings:allTests`)
+- iOS framework: `./gradlew shared:linkDebugFrameworkIosSimulatorArm64`
+- Tests: `./gradlew shared:allTests` (+ per-module `allTests` for modules with their own tests, e.g., `./gradlew core:settings:allTests`)
 - Lint: `./gradlew detekt`
 - Release: `./gradlew androidApp:assembleRelease`
 
@@ -199,8 +199,8 @@ Run these after every change, in this order — fastest-first. Stop on the first
 2. `./gradlew :tests:konsist:test` (architecture rules from this AGENTS.md)
 3. `./gradlew buildHealth` (DAGP — dependency hygiene; warnings only by default)
 4. `./gradlew androidApp:assembleDebug`
-5. `./gradlew composeApp:linkDebugFrameworkIosSimulatorArm64`
-6. `./gradlew composeApp:allTests`
+5. `./gradlew shared:linkDebugFrameworkIosSimulatorArm64`
+6. `./gradlew shared:allTests`
 7. `./gradlew core:settings:allTests` (any module with its own tests)
 
 ## Coding Discipline
@@ -226,7 +226,7 @@ Imperative invariants most often violated by LLMs unfamiliar with KMP linker beh
 - **Use Koin for DI. Never Hilt.** `hiltViewModel()` and `@HiltViewModel` do not compile in `commonMain`. Use `viewModelOf` + `koinViewModel()`.
 - **Verify KMP targets before adding a dependency.** Before adding a line to `commonMain.dependencies { … }`, confirm the artifact publishes `-jvm`, `-iosarm64`, `-iosX64`, `-iosSimulatorArm64` on Maven Central. Otherwise, scope to `androidMain`/`iosMain` or wrap behind a platform interface.
 - **Never extend detekt or lint baselines.** Fix the underlying violation. Extending `config/detekt/baseline.xml` is a blocking review failure.
-- **Koin modules are owned by the module that declares the bindings.** Each `:feature:*:impl` exposes `<feature>FeatureModule`; each `:core:*` with bindings exposes `<core>Module` (+ `platform<Core>Module()` expect/actual when platform-specific); `:composeApp/di/AppModule.kt` aggregates them in `appModules()`.
+- **Koin modules are owned by the module that declares the bindings.** Each `:feature:*:impl` exposes `<feature>FeatureModule`; each `:core:*` with bindings exposes `<core>Module` (+ `platform<Core>Module()` expect/actual when platform-specific); `:shared/di/AppModule.kt` aggregates them in `appModules()`.
 
 ## Visibility
 
@@ -249,9 +249,9 @@ See `docs/visibility.md` for the explicit-API audit guide.
 - Root package: `com.po4yka.app`. Sub-package per module (e.g., `com.po4yka.app.feature.home.impl`, `com.po4yka.app.core.settings`).
 - Android namespace per module matches the Kotlin package and is set in the module's `build.gradle.kts` under `kotlin.androidLibrary { namespace = … }`.
 - `AppTheme` lives in `:core:ui` (`com.po4yka.app.core.ui.theme`); wraps `IndustrialTheme` with light/dark via `isSystemInDarkTheme()`.
-- Compose resources are per-module (`<module>/src/commonMain/composeResources/`). App-global strings stay in `:composeApp`.
+- Compose resources are per-module (`<module>/src/commonMain/composeResources/`). App-global strings stay in `:shared`.
 - ViewModels are registered via `viewModelOf(::XViewModel)` in the feature `:impl` module's `<feature>FeatureModule` (Koin), injected via `koinViewModel()`.
-- Platform primitives use `expect/actual` inside the module that owns the primitive. `:composeApp` owns `getDatabaseBuilder()` (DB-specific). `:core:settings` owns `platformSettingsModule()`. Cross-module primitives use Koin bindings instead.
+- Platform primitives use `expect/actual` inside the module that owns the primitive. `:shared` owns the Koin `platformModule()` actuals that build `AppDatabase` from per-platform Room builders (Android resolves `Context` via Koin's `androidContext()`; iOS resolves the documents directory via `NSFileManager`). `:core:settings` owns `platformSettingsModule()`. Cross-module primitives use Koin bindings instead.
 
 ## Code Quality
 
@@ -275,8 +275,8 @@ When the Android task becomes available:
 
 On-demand skills (`Skill` tool / `/<name>`) exist for repeatable workflows — use them instead of re-deriving steps:
 
-- `kmp-feature` — scaffold a new feature as `:feature:<name>:api` + `:feature:<name>:impl` (route, screen, ViewModel, Koin module, nav entries, DI aggregation in `:composeApp`)
-- `kmp-entity` — add a Room entity + DAO to an existing `:data:<domain>` module (or scaffold a new one), then register in `:composeApp`'s `AppDatabase`
+- `kmp-feature` — scaffold a new feature as `:feature:<name>:api` + `:feature:<name>:impl` (route, screen, ViewModel, Koin module, nav entries, DI aggregation in `:shared`)
+- `kmp-entity` — add a Room entity + DAO to an existing `:data:<domain>` module (or scaffold a new one), then register in `:shared`'s `AppDatabase`
 - `kmp-platform-audit` — audit `expect/actual` completeness across all modules, add a new platform implementation
 - `kmp-build` — run the verification pipeline
 - `kmp-module-graph` — author and run Konsist architecture tests enforcing the module-boundary table above

@@ -26,7 +26,7 @@ The RC1 pass sets the authoritative numbers per device tier. Budget is "don't re
 
 - Baseline Profile typically shaves ~30% off first-launch execution on Android; the two cold-start rows reflect that.
 - 16 ms scroll p95 is the 60 fps floor. Higher-refresh-rate devices (90–120 Hz) are treated as bonus headroom, not a new budget — displaying smoothly at 60 fps on a mid-tier device is the floor.
-- iOS APK size is larger because the `ComposeApp` static framework includes the Kotlin runtime, Compose Multiplatform binaries, and every KMP klib statically linked. Dynamic frameworks would shrink it but add launch cost.
+- iOS APK size is larger because the `Shared` static framework includes the Kotlin runtime, Compose Multiplatform binaries, and every KMP klib statically linked. Dynamic frameworks would shrink it but add launch cost.
 
 ## Tooling
 
@@ -60,7 +60,7 @@ Reports land in Android Studio's Profiler view plus a machine-readable JSON for 
 Composables skip recomposition when their inputs are stable (primitive or `@Immutable`). Use the Compose compiler's stability report to find unstable params:
 
 ```bash
-./gradlew :composeApp:compileDebugKotlinAndroid -PcomposeCompilerReports=build/compose_compiler
+./gradlew :shared:compileDebugKotlinAndroid -PcomposeCompilerReports=build/compose_compiler
 ```
 
 Inspect `build/compose_compiler/*-classes.txt` for `unstable` flags on shared data classes. Fix by annotating with `@Immutable` (for data classes whose fields are all stable) or by making collections read-only types.

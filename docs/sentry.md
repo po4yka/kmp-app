@@ -1,12 +1,12 @@
 # Sentry — KMP Crash Reporting
 
-This template ships with [`sentry-kotlin-multiplatform`](https://github.com/getsentry/sentry-kotlin-multiplatform) wired into `:composeApp/commonMain`. By default it is a no-op: nothing is sent until a DSN is provided.
+This template ships with [`sentry-kotlin-multiplatform`](https://github.com/getsentry/sentry-kotlin-multiplatform) wired into `:shared` (commonMain). By default it is a no-op: nothing is sent until a DSN is provided.
 
 ## Wiring
 
 - **SDK**: `io.sentry:sentry-kotlin-multiplatform` (in `gradle/libs.versions.toml` as `sentry-kmp`)
-- **Config**: `composeApp/src/commonMain/kotlin/com/po4yka/app/observability/SentryConfig.kt` — `initSentry()`
-- **Init call**: `composeApp/src/commonMain/kotlin/com/po4yka/app/App.kt` (`remember { initSentry(); Unit }`)
+- **Config**: `shared/src/commonMain/kotlin/com/po4yka/app/shared/observability/SentryConfig.kt` — `initSentry()`
+- **Init call**: `shared/src/commonMain/kotlin/com/po4yka/app/shared/App.kt` (`remember { initSentry(); Unit }`)
 - **DSN source**: `BuildKonfig.SENTRY_DSN`, populated at configuration time from one of:
   1. `-PsentryDsn=https://...@sentry.io/...` Gradle property (preferred for CI)
   2. `SENTRY_DSN` environment variable
@@ -20,7 +20,7 @@ The SDK is initialized exactly once via `remember { ... }` at the top of the `Ap
 
 You usually do **not** want Sentry firing on every local rebuild. Leave `SENTRY_DSN` unset.
 
-If you need to test the integration locally, add to `local.properties` (gitignored) and update the `buildkonfig` block in `composeApp/build.gradle.kts` to read from it, **or** invoke Gradle directly:
+If you need to test the integration locally, add to `local.properties` (gitignored) and update the `buildkonfig` block in `shared/build.gradle.kts` to read from it, **or** invoke Gradle directly:
 
 ```bash
 ./gradlew androidApp:assembleDebug -PsentryDsn="https://<your-dsn>@sentry.io/<project>"
@@ -52,7 +52,7 @@ The debug-build CI job (`build.yml`) intentionally does **not** wire the DSN —
 
 ## iOS-side caveats
 
-The Kotlin SDK delegates to the Sentry Cocoa SDK on iOS. The Cocoa SDK is bundled transitively; no extra `Podfile` entry is needed when `iosApp/` imports `ComposeApp.framework`.
+The Kotlin SDK delegates to the Sentry Cocoa SDK on iOS. The Cocoa SDK is bundled transitively; no extra `Podfile` entry is needed when `iosApp/` imports `Shared.framework`.
 
 If `iosApp/` adds its own Swift code that should also report to Sentry, do **not** double-init — call into Kotlin's `initSentry()` from the Swift side (it is exposed as `SentryConfigKt.initSentry()` on the framework boundary), and let the existing Cocoa instance handle both surfaces.
 
@@ -76,8 +76,8 @@ A new event must appear in the Sentry project within ~30 seconds. If it does not
 
 If a future project does not want crash telemetry:
 
-1. Delete `composeApp/src/commonMain/kotlin/com/po4yka/app/observability/`.
+1. Delete `shared/src/commonMain/kotlin/com/po4yka/app/shared/observability/`.
 2. Remove the `remember { initSentry(); ... }` line in `App.kt`.
-3. Remove the `implementation(libs.sentry.kmp)` line in `composeApp/build.gradle.kts`.
+3. Remove the `implementation(libs.sentry.kmp)` line in `shared/build.gradle.kts`.
 4. Remove the `SENTRY_DSN` BuildKonfig field.
 5. Remove the `sentry-kmp` entries from `gradle/libs.versions.toml`.

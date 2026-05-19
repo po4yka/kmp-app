@@ -16,7 +16,7 @@ dependencyResolutionManagement {
     }
 }
 
-// composeApp/build.gradle.kts
+// shared/build.gradle.kts
 commonMain.dependencies {
     implementation("com.github.po4yka.industrial-design-cmp:library:0.1.0")
 }
@@ -166,8 +166,8 @@ After adding the dependency, run your project's verification pipeline. For a KMP
 ```
 ./gradlew detekt
 ./gradlew androidApp:assembleDebug
-./gradlew composeApp:linkDebugFrameworkIosSimulatorArm64
-./gradlew composeApp:allTests
+./gradlew shared:linkDebugFrameworkIosSimulatorArm64
+./gradlew shared:allTests
 ```
 
 Stop on the first failure.
