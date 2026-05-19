@@ -23,9 +23,11 @@ kotlin {
     // iOS targets are only configurable on macOS hosts (Kotlin/Native + Room KSP
     // require a Mac to compile iOS klibs). Skipping them on Linux keeps
     // `./gradlew check` green on the Android CI runner.
+    // iosX64 (Intel Mac simulator) is intentionally omitted: Compose Multiplatform
+    // 1.11+ no longer publishes that variant, and Apple silicon is now the only
+    // supported development host for iOS work.
     if (OperatingSystem.current().isMacOsX) {
         listOf(
-            iosX64(),
             iosArm64(),
             iosSimulatorArm64()
         ).forEach { iosTarget ->

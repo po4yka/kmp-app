@@ -224,7 +224,7 @@ Imperative invariants most often violated by LLMs unfamiliar with KMP linker beh
 - **`expect`/`actual` is for platform wiring only.** No business logic in `expect` declarations. Keep logic in `commonMain` Kotlin classes; reserve `expect` for thin platform primitives or `PlatformModule` DI glue.
 - **Room DAOs must be `suspend` or return `Flow`.** Blocking DAO calls fail the iOS linker.
 - **Use Koin for DI. Never Hilt.** `hiltViewModel()` and `@HiltViewModel` do not compile in `commonMain`. Use `viewModelOf` + `koinViewModel()`.
-- **Verify KMP targets before adding a dependency.** Before adding a line to `commonMain.dependencies { … }`, confirm the artifact publishes `-jvm`, `-iosarm64`, `-iosX64`, `-iosSimulatorArm64` on Maven Central. Otherwise, scope to `androidMain`/`iosMain` or wrap behind a platform interface.
+- **Verify KMP targets before adding a dependency.** Before adding a line to `commonMain.dependencies { … }`, confirm the artifact publishes `-jvm`, `-iosarm64`, `-iosSimulatorArm64` on Maven Central. Otherwise, scope to `androidMain`/`iosMain` or wrap behind a platform interface.
 - **Never extend detekt or lint baselines.** Fix the underlying violation. Extending `config/detekt/baseline.xml` is a blocking review failure.
 - **Koin modules are owned by the module that declares the bindings.** Each `:feature:*:impl` exposes `<feature>FeatureModule`; each `:core:*` with bindings exposes `<core>Module` (+ `platform<Core>Module()` expect/actual when platform-specific); `:shared/di/AppModule.kt` aggregates them in `appModules()`.
 
@@ -242,7 +242,7 @@ See `docs/visibility.md` for the explicit-API audit guide.
 - Single version catalog `gradle/libs.versions.toml`. Every dep declaration uses `libs.*` (main scripts) or `catalog.findLibrary(...)` (convention plugins via `build-logic/src/main/kotlin/Libs.kt`). **No inline versions** in `build.gradle.kts`.
 - Convention plugins in `build-logic/` own recurring dependency groups. The third module that wants the same `implementation(libs.X)` block is the trigger to extract a convention.
 - Renovate (`renovate.json`) auto-bumps the catalog. Renovate PRs go through the standard verification pipeline before merge.
-- New deps require a KMP-target check (publishes `-jvm`, `-iosarm64`, `-iosX64`, `-iosSimulatorArm64` on Maven Central) before landing in any `commonMain.dependencies` block.
+- New deps require a KMP-target check (publishes `-jvm`, `-iosarm64`, `-iosSimulatorArm64` on Maven Central) before landing in any `commonMain.dependencies` block.
 
 ## Conventions
 

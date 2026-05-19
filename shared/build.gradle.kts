@@ -68,10 +68,10 @@ kotlin {
 dependencies {
     add("kspAndroid", libs.room.compiler)
     // iOS targets are only configured on macOS hosts (see kmp-app.kmp-library),
-    // so the matching ksp configurations only exist there.
+    // so the matching ksp configurations only exist there. iosX64 is omitted
+    // because Compose Multiplatform 1.11+ does not publish that variant.
     if (OperatingSystem.current().isMacOsX) {
         add("kspIosSimulatorArm64", libs.room.compiler)
-        add("kspIosX64", libs.room.compiler)
         add("kspIosArm64", libs.room.compiler)
     }
 }

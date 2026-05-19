@@ -79,7 +79,7 @@ Quick reference for what compiles where. If something is not in `commonMain`, ab
 Before adding any line to `commonMain.dependencies { … }`:
 
 1. **Coordinates** — confirm `group:artifact:version` exists on Maven Central.
-2. **Target support** — confirm it publishes `-jvm`, `-iosarm64`, `-iosX64`, `-iosSimulatorArm64`. Much of AndroidX is still Android-only.
+2. **Target support** — confirm it publishes `-jvm`, `-iosarm64`, `-iosSimulatorArm64`. Much of AndroidX is still Android-only. (`iosX64` is intentionally not a project target — Compose Multiplatform 1.11+ no longer publishes that variant.)
 3. **API shape** — confirm the API exists in the version; signatures drift across major versions.
 
 If verification isn't possible (no docs MCP, no network), add the dep with a `// verify latest` comment so the next pass fixes it, or scope the dep to `androidMain` only.
