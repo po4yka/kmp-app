@@ -1,4 +1,5 @@
 import com.codingfeline.buildkonfig.compiler.FieldSpec.Type.STRING
+import org.gradle.internal.os.OperatingSystem
 
 plugins {
     id("kmp-app.kmp-compose")
@@ -63,9 +64,13 @@ kotlin {
 
 dependencies {
     add("kspAndroid", libs.room.compiler)
-    add("kspIosSimulatorArm64", libs.room.compiler)
-    add("kspIosX64", libs.room.compiler)
-    add("kspIosArm64", libs.room.compiler)
+    // iOS targets are only configured on macOS hosts (see kmp-app.kmp-library),
+    // so the matching ksp configurations only exist there.
+    if (OperatingSystem.current().isMacOsX) {
+        add("kspIosSimulatorArm64", libs.room.compiler)
+        add("kspIosX64", libs.room.compiler)
+        add("kspIosArm64", libs.room.compiler)
+    }
 }
 
 room {
