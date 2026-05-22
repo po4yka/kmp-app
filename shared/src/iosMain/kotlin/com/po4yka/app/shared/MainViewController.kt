@@ -10,7 +10,7 @@ fun MainViewController() = ComposeUIViewController(
         startKoin {
             modules(appModules() + platformModule())
         }
-    }
+    },
 ) {
     App()
 }

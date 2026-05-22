@@ -9,7 +9,7 @@ import org.koin.dsl.module
 public actual fun platformSettingsModule(): Module = module {
     single<Settings> {
         SharedPreferencesSettings(
-            get<Context>().getSharedPreferences("app_prefs", Context.MODE_PRIVATE)
+            get<Context>().getSharedPreferences("app_prefs", Context.MODE_PRIVATE),
         )
     }
 }

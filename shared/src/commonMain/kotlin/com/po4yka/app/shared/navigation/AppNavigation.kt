@@ -39,6 +39,6 @@ fun AppNavigation() {
         entryProvider = entryProvider {
             homeEntries(onOpenDetail = { itemId -> backStack.add(DetailRoute(itemId)) })
             detailEntries(onBack = { backStack.removeLastOrNull() })
-        }
+        },
     )
 }

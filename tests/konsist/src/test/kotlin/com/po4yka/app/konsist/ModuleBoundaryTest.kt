@@ -91,7 +91,7 @@ class ModuleBoundaryTest {
             .flatMap { it.imports }
             .filter { imp ->
                 imp.name.startsWith("com.po4yka.app.data.") ||
-                    imp.name.contains(".feature.") && imp.name.contains(".impl.")
+                    (imp.name.contains(".feature.") && imp.name.contains(".impl."))
             }
             .assertEmpty(
                 additionalMessage = ":feature:*:api may only depend on :core:* and external libs.",

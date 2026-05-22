@@ -10,10 +10,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 
-class DetailViewModel(
-    private val itemId: Long,
-    private val sampleDao: SampleDao,
-) : ViewModel() {
+class DetailViewModel(private val itemId: Long, private val sampleDao: SampleDao) : ViewModel() {
 
     private val _item = MutableStateFlow<SampleEntity?>(null)
     val item: StateFlow<SampleEntity?> = _item.asStateFlow()

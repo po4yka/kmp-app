@@ -4,10 +4,10 @@ import com.po4yka.app.core.network.networkModule
 import com.po4yka.app.core.settings.platformSettingsModule
 import com.po4yka.app.core.settings.settingsModule
 import com.po4yka.app.data.sample.SampleDao
-import com.po4yka.app.shared.BuildKonfig
-import com.po4yka.app.shared.data.local.AppDatabase
 import com.po4yka.app.feature.detail.impl.detailFeatureModule
 import com.po4yka.app.feature.home.impl.homeFeatureModule
+import com.po4yka.app.shared.BuildKonfig
+import com.po4yka.app.shared.data.local.AppDatabase
 import org.koin.core.module.Module
 import org.koin.dsl.module
 

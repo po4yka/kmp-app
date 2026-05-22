@@ -1,0 +1,33 @@
+# EditorConfig — shared editor + ktlint settings for the KMP App template.
+# Spotless runs ktlint, which reads `ktlint_*` keys below; IDE editors read the rest.
+# https://editorconfig.org
+root = true
+
+[*]
+charset = utf-8
+end_of_line = lf
+insert_final_newline = true
+trim_trailing_whitespace = true
+indent_style = space
+indent_size = 4
+
+# Kotlin sources + Gradle Kotlin DSL — keep ktlint and IntelliJ aligned.
+[*.{kt,kts}]
+ktlint_code_style = intellij_idea
+# IntelliJ IDEA import layout: all imports flat, no blank lines, no wildcards.
+ij_kotlin_imports_layout = *
+ij_kotlin_allow_trailing_comma = true
+ij_kotlin_allow_trailing_comma_on_call_site = true
+max_line_length = 120
+# @Composable functions are intentionally PascalCase (Compose convention). ktlint's
+# function-naming rule cannot reliably exempt them, and detekt already owns naming
+# mechanics for this project — so disable the overlapping ktlint rule.
+ktlint_standard_function-naming = disabled
+
+# Config/data files conventionally use a 2-space indent.
+[*.{yml,yaml,json}]
+indent_size = 2
+
+# Markdown relies on trailing whitespace for hard line breaks.
+[*.md]
+trim_trailing_whitespace = false

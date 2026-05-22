@@ -12,6 +12,9 @@ plugins {
     alias(libs.plugins.detekt)
     alias(libs.plugins.dependency.analysis)
     alias(libs.plugins.gradle.doctor)
+    alias(libs.plugins.spotless)
+    alias(libs.plugins.kover)
+    alias(libs.plugins.modulegraph)
 }
 
 // Gradle Doctor: surfaces JDK mismatches, cache misses, and slow tasks.
@@ -63,4 +66,54 @@ detekt {
         "$rootDir/feature/detail/api/src/commonMain/kotlin",
         "$rootDir/feature/detail/impl/src/commonMain/kotlin",
     )
+}
+
+// Spotless: enforces ktlint formatting across every module. Formatting-only
+// (no license header). Run `./gradlew spotlessApply` to fix, `spotlessCheck` to verify.
+// ktlint reads `.editorconfig` (intellij_idea code style) for its rules.
+val ktlintVersion = libs.versions.ktlint.get()
+// @Composable functions are intentionally PascalCase (Compose convention) and
+// detekt already owns naming mechanics here — disable ktlint's overlapping rule.
+val ktlintRuleOverrides = mapOf("ktlint_standard_function-naming" to "disabled")
+subprojects {
+    apply(plugin = "com.diffplug.spotless")
+    extensions.configure<com.diffplug.gradle.spotless.SpotlessExtension> {
+        kotlin {
+            target("src/**/*.kt")
+            ktlint(ktlintVersion).editorConfigOverride(ktlintRuleOverrides)
+        }
+        kotlinGradle {
+            target("*.gradle.kts")
+            ktlint(ktlintVersion)
+        }
+    }
+}
+
+// Kover: aggregates per-module coverage into one merged report.
+// Run `./gradlew koverXmlReport` or `koverHtmlReport`. Exclusions for generated
+// code are configured per module via the `kmp-app.kover` convention plugin.
+dependencies {
+    kover(project(":shared"))
+    kover(project(":androidApp"))
+    kover(project(":core:common"))
+    kover(project(":core:ui"))
+    kover(project(":core:navigation"))
+    kover(project(":core:network"))
+    kover(project(":core:settings"))
+    kover(project(":data:sample"))
+    kover(project(":feature:home:api"))
+    kover(project(":feature:home:impl"))
+    kover(project(":feature:detail:api"))
+    kover(project(":feature:detail:impl"))
+}
+
+// Module graph: renders the inter-module dependency graph as a Mermaid diagram.
+// Run `./gradlew createModuleGraph` to regenerate docs/MODULE_GRAPH.md.
+// `:androidApp` is the single graph root (it transitively reaches every
+// production module); rooting there drops the noisy root-project + test edges.
+moduleGraphConfig {
+    readmePath.set("$rootDir/docs/MODULE_GRAPH.md")
+    heading.set("## Module Graph")
+    rootModulesRegex.set(":androidApp")
+    excludedConfigurationsRegex.set(".*([tT]est|[kK]over).*")
 }

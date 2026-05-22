@@ -10,9 +10,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
-class HomeViewModel(
-    private val sampleDao: SampleDao,
-) : ViewModel() {
+class HomeViewModel(private val sampleDao: SampleDao) : ViewModel() {
 
     val items: StateFlow<List<SampleEntity>> = sampleDao.getAll()
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())

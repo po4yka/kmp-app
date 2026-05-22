@@ -1,5 +1,6 @@
 plugins {
     id("kmp-app.kmp-feature-ui")
+    id("kmp-app.kover")
 }
 
 kotlin {

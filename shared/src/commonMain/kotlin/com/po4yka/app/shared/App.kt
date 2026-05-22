@@ -8,7 +8,10 @@ import com.po4yka.app.shared.observability.initSentry
 
 @Composable
 fun App() {
-    remember { initSentry(); Unit }
+    remember {
+        initSentry()
+        Unit
+    }
     AppTheme {
         AppNavigation()
     }

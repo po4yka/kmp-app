@@ -1,5 +1,6 @@
 plugins {
     id("kmp-app.kmp-public-compose")
+    id("kmp-app.kover")
     alias(libs.plugins.roborazzi)
 }
 

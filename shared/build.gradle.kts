@@ -3,6 +3,7 @@ import org.gradle.internal.os.OperatingSystem
 
 plugins {
     id("kmp-app.kmp-compose")
+    id("kmp-app.kover")
     alias(libs.plugins.kotlin.serialization)
     alias(libs.plugins.ksp)
     alias(libs.plugins.room)

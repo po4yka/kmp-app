@@ -9,4 +9,5 @@ dependencies {
     implementation(libs.plugin.compose.multiplatform)
     implementation(libs.plugin.compose.compiler)
     implementation(libs.plugin.kotlin.serialization)
+    implementation(libs.plugin.kover)
 }
