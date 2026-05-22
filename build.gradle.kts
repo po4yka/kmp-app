@@ -115,5 +115,7 @@ moduleGraphConfig {
     readmePath.set("$rootDir/docs/MODULE_GRAPH.md")
     heading.set("## Module Graph")
     rootModulesRegex.set(":androidApp")
-    excludedConfigurationsRegex.set(".*([tT]est|[kK]over).*")
+    // Drop test/kover edges, plus the `baselineProfile` consumer configuration
+    // (:androidApp -> :baselineProfile) which is build tooling, not a runtime dep.
+    excludedConfigurationsRegex.set(".*([tT]est|[kK]over|[bB]aselineProfile).*")
 }

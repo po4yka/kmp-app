@@ -50,11 +50,16 @@ Kotlin Multiplatform template targeting iOS and Android with Compose Multiplatfo
 :feature:detail:impl(kmp-app.kmp-feature-ui)     — DetailScreen, DetailViewModel,
                                                     detailFeatureModule, detailEntries(...)
 
+:baselineProfile  (kmp-app.baseline-profile) — Baseline Profile generator
+   └─► instruments :androidApp via `targetProjectPath` (com.android.test module)
+
+:tests:konsist    (kotlin("jvm"))             — architecture tests
+
 iosApp (Swift, Xcode)
    └─► imports Shared.framework built from :shared
 ```
 
-Every module (except `:androidApp`) is a KMP library with `commonMain`, `androidMain`, and `iosMain` source sets.
+Every module (except `:androidApp`, `:baselineProfile`, and `:tests:konsist`) is a KMP library with `commonMain`, `androidMain`, and `iosMain` source sets.
 
 ## Source Set Layout
 
@@ -89,6 +94,7 @@ Dependency rules keep the graph acyclic and the app shell in exclusive control o
 - **Prefer `implementation(project(...))` over `api(...)`.** `api` is only used on `:core:navigation` (re-exposes Navigation 3) and `:core:common` (re-exposes Kermit/coroutines/datetime).
 - **New repeated build logic goes into a convention plugin.** If the same Gradle block appears in two modules, extract it into `build-logic/` before adding it to a third.
 - **Add a `:feature:<name>:domain` module only when justified.** Triggers: ≥2 repositories orchestrated by the feature, non-trivial state machines, or logic shared across features. Default: no domain layer; put use-case code in the ViewModel or repository.
+- **`:baselineProfile` is a test-only module.** It is a `com.android.test` module that instruments `:androidApp` via `targetProjectPath = ":androidApp"`. It depends only on `:androidApp` (through that path) and benchmark/uiautomator test libs — never on `:core:*`, `:data:*`, `:feature:*`, or `:shared` directly. The `:androidApp -> :baselineProfile` `baselineProfile`-configuration edge is build tooling and is excluded from the module graph.
 
 ### Convention plugins
 
@@ -99,6 +105,8 @@ Dependency rules keep the graph acyclic and the app shell in exclusive control o
 - `kmp-app.kmp-feature-ui` — `kmp-compose` + kotlinx-serialization + Navigation3 + koin-compose-viewmodel + lifecycle. Apply on `:feature:*:impl`.
 - `kmp-app.kmp-data` — `kmp-library` + kotlinx-serialization + room-runtime + sqlite-bundled + koin + coroutines. Apply on `:data:*`.
 - `kmp-app.android-application` — for `:androidApp` only.
+- `kmp-app.baseline-profile` — `com.android.test` + `androidx.baselineprofile` (compileSdk 36 / minSdk 28 / targetSdk 36, Java 17). For `:baselineProfile` only — it is not a KMP library and does not apply `kmp-app.kmp-library`.
+- `kmp-app.roborazzi` — Roborazzi plugin + Roborazzi/Robolectric `androidUnitTest` deps. Apply on any KMP module that needs Compose screenshot tests (today: `:core:ui`). See **Screenshot Testing** for the AGP limitation.
 
 Never reapply Compose, Room, or KSP plugins per module when a convention already covers them.
 

@@ -53,3 +53,6 @@ include(":feature:detail:impl")
 
 // Test-only modules
 include(":tests:konsist")
+
+// Baseline Profile generator (com.android.test; instruments :androidApp)
+include(":baselineProfile")

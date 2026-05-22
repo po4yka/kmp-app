@@ -1,7 +1,7 @@
 plugins {
     id("kmp-app.kmp-public-compose")
     id("kmp-app.kover")
-    alias(libs.plugins.roborazzi)
+    id("kmp-app.roborazzi")
 }
 
 kotlin {
@@ -18,11 +18,8 @@ kotlin {
         }
 
         androidUnitTest.dependencies {
-            implementation(kotlin("test"))
-            implementation(libs.roborazzi)
-            implementation(libs.roborazzi.compose)
-            implementation(libs.roborazzi.junit)
-            implementation(libs.robolectric)
+            // Roborazzi + Robolectric come from the `kmp-app.roborazzi` convention.
+            // The Compose ui-test runner is Compose-version-coupled, not catalog-managed.
             implementation("org.jetbrains.compose.ui:ui-test-junit4-android:1.10.3")
         }
     }
